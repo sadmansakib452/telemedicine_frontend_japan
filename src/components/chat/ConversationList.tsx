@@ -1,0 +1,123 @@
+"use client";
+
+import Image from "next/image";
+import { MoreDotIcon } from "@/icons";
+import type { Conversation } from "./InboxWorkspace";
+
+type ConversationListProps = {
+  conversations: Conversation[];
+  activeConversationId: string;
+  onSelectConversation: (conversationId: string) => void;
+};
+
+export default function ConversationList({
+  conversations,
+  activeConversationId,
+  onSelectConversation,
+}: ConversationListProps) {
+  return (
+    <aside className="flex h-full w-full flex-col rounded-[32px] border border-gray-200 bg-white p-6 shadow-theme-xl dark:border-gray-800 dark:bg-gray-900">
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white/90">
+            Chats
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Reach out to your patients and partners.
+          </p>
+        </div>
+        <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-200">
+          <MoreDotIcon className="h-5 w-5" />
+        </button>
+      </header>
+
+      <label className="mb-6 flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500 focus-within:border-brand-300 focus-within:bg-white dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 dark:focus-within:border-brand-500/40">
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 17 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.16663 12.6666C10.1081 12.6666 12.5 10.2747 12.5 7.33329C12.5 4.39187 10.1081 1.99996 7.16663 1.99996C4.22521 1.99996 1.83329 4.39187 1.83329 7.33329C1.83329 10.2747 4.22521 12.6666 7.16663 12.6666Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M14.5 14.6666L11.1666 11.3333"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <input
+          type="search"
+          placeholder="Search..."
+          className="flex-1 bg-transparent text-sm text-gray-600 outline-none dark:text-gray-200"
+        />
+      </label>
+
+      <ul className="flex-1 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+        {conversations.map((conversation) => {
+          const isActive = conversation.id === activeConversationId;
+          return (
+          <li key={conversation.id}>
+            <button
+                type="button"
+                onClick={() => onSelectConversation(conversation.id)}
+                className={`flex w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left transition ${
+                  isActive
+                    ? "border-brand-200 bg-brand-50 shadow-theme-xs dark:border-brand-500/40 dark:bg-brand-500/15"
+                    : "border-transparent bg-gray-50 hover:border-brand-200 hover:bg-brand-50/40 dark:bg-gray-900/40 dark:hover:border-brand-500/30 dark:hover:bg-white/5"
+                }`}
+            >
+              <span className="relative inline-flex h-12 w-12 overflow-hidden rounded-full">
+                <Image
+                  src={conversation.avatar}
+                  alt={conversation.name}
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
+                {conversation.online ? (
+                  <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-success-500 dark:border-gray-900"></span>
+                ) : null}
+              </span>
+
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white/90">
+                    {conversation.name}
+                  </p>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {conversation.timeAgo}
+                  </span>
+                </div>
+                <p className="text-xs text-brand-500 dark:text-brand-300">
+                  {conversation.role}
+                </p>
+                <p className="mt-1 line-clamp-1 text-sm text-gray-500 dark:text-gray-300">
+                  {conversation.preview}
+                </p>
+              </div>
+            </button>
+          </li>
+        );
+        })}
+      </ul>
+
+      <div className="mt-6 hidden items-center justify-between lg:flex">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          N
+        </span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          You are online
+        </span>
+      </div>
+    </aside>
+  );
+}
+
