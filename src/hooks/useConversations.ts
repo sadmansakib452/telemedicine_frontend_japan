@@ -15,7 +15,7 @@ import {
 } from '@/services/conversation.service';
 import { useSocket } from '@/hooks/useSocket';
 import type { ConversationListItem, CreateConversationRequest, RespondToBroadcastRequest, Conversation } from '@/types/conversation.types';
-import type { ConversationEvent } from '@/types/socket.types';
+import type { ConversationEvent, MessageEvent } from '@/types/socket.types';
 import type { UserType } from '@/config/constants';
 
 /**
@@ -88,7 +88,9 @@ export const useConversations = (
           // Update existing conversation
           const updated = [...prev];
           updated[existingIndex] = listItem;
-          return updated;
+          // Move to top (most recent first)
+          const [updatedItem] = updated.splice(existingIndex, 1);
+          return [updatedItem, ...updated];
         } else {
           // Add new conversation to the beginning (most recent first)
           return [listItem, ...prev];
@@ -99,10 +101,55 @@ export const useConversations = (
   );
 
   /**
-   * Setup WebSocket listeners for conversations
+   * Handle new message WebSocket event to update conversation list
+   */
+  const handleMessage = useCallback(
+    (event: MessageEvent) => {
+      if (!event?.data?.conversation_id) {
+        return;
+      }
+
+      const message = event.data;
+      const conversationId = message.conversation_id;
+
+      // Update conversation's last message and move to top
+      setConversations((prev) => {
+        const existingIndex = prev.findIndex((c) => c.id === conversationId);
+        
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          const conversation = updated[existingIndex];
+          
+          // Update last message info
+          const updatedConversation: ConversationListItem = {
+            ...conversation,
+            updated_at: message.created_at, // Use message timestamp as updated_at
+            last_message: {
+              id: message.id,
+              message: message.message || '',
+              created_at: message.created_at,
+            },
+          };
+          
+          // Remove from current position and add to top
+          updated.splice(existingIndex, 1);
+          return [updatedConversation, ...updated];
+        }
+        
+        // If conversation not found, it might be a new one - refetch
+        // But don't refetch here to avoid infinite loops, just return unchanged
+        return prev;
+      });
+    },
+    []
+  );
+
+  /**
+   * Setup WebSocket listeners for conversations and messages
    */
   useSocket(userType, {
     onConversation: handleConversation,
+    onMessage: handleMessage, // Listen to messages to update conversation list
   });
 
   /**

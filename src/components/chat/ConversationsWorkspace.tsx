@@ -78,7 +78,7 @@ const mapConversationListItem = (
 export default function ConversationsWorkspace() {
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const { isOnline } = usePresence();
+  const { isOnline, setInitialStatus } = usePresence();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
@@ -113,6 +113,19 @@ export default function ConversationsWorkspace() {
     openModal: openPrescriptionModal,
     closeModal: closePrescriptionModal,
   } = usePrescription();
+
+  // Initialize presence status for users in conversations
+  useEffect(() => {
+    if (!conversations || conversations.length === 0) return;
+    
+    // Set initial status for all users in conversations
+    // Default to 'online' optimistically - will be updated by WebSocket events
+    conversations.forEach((conv) => {
+      // Set status for creator and participant
+      setInitialStatus(conv.creator_id, 'online');
+      setInitialStatus(conv.participant_id, 'online');
+    });
+  }, [conversations, setInitialStatus]);
 
   // Map conversations to display format
   const mappedConversations = useMemo(() => {

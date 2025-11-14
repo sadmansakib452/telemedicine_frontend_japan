@@ -61,10 +61,13 @@ export const useMessages = (
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const messagesRef = useRef<MessageListItem[]>([]);
+  const messageIdsRef = useRef<Set<string>>(new Set()); // Track message IDs immediately
 
-  // Update ref when messages change
+  // Update refs when messages change
   useEffect(() => {
     messagesRef.current = messages;
+    // Update IDs set immediately
+    messageIdsRef.current = new Set(messages.map((m) => m.id));
   }, [messages]);
 
   /**
@@ -85,18 +88,18 @@ export const useMessages = (
         return;
       }
 
-      // Skip if we already have this message (handles room + socket delivery)
-      const alreadyExists = messagesRef.current.some(
-        (m) => m.id === incomingMessage.id
-      );
-      if (alreadyExists) {
+      // Skip if we already have this message (handles room + socket delivery + optimistic updates)
+      if (messageIdsRef.current.has(incomingMessage.id)) {
         return;
       }
 
       // Only add if it's for the current conversation
       if (incomingMessage.conversation_id === conversationId) {
+        // Mark as seen immediately to prevent duplicates
+        messageIdsRef.current.add(incomingMessage.id);
+        
         setMessages((prev) => {
-          // Check if message already exists
+          // Double-check in state (defensive)
           const exists = prev.some((m) => m.id === incomingMessage.id);
           if (exists) {
             return prev;
@@ -184,9 +187,18 @@ export const useMessages = (
         
         if (append) {
           // Prepend older messages (cursor-based pagination loads older messages)
-          setMessages((prev) => [...result.messages, ...prev]);
+          setMessages((prev) => {
+            const newMessages = result.messages.filter(
+              (m) => !messageIdsRef.current.has(m.id)
+            );
+            // Update IDs set
+            newMessages.forEach((m) => messageIdsRef.current.add(m.id));
+            return [...newMessages, ...prev];
+          });
         } else {
           // Replace messages (initial load or refresh)
+          // Update IDs set
+          messageIdsRef.current = new Set(result.messages.map((m) => m.id));
           setMessages(result.messages);
         }
 
@@ -252,12 +264,22 @@ export const useMessages = (
       try {
         const message = await sendMessage(data);
         
-        // Optimistically add message to list (will be updated by WebSocket)
+        // Mark as seen immediately to prevent duplicate from WebSocket echo
+        messageIdsRef.current.add(message.id);
+        
+        // Optimistically add message to list (will be updated by WebSocket if different)
         const listItem: MessageListItem = {
           ...message,
         };
         
-        setMessages((prev) => [...prev, listItem]);
+        setMessages((prev) => {
+          // Check if already exists (defensive)
+          const exists = prev.some((m) => m.id === message.id);
+          if (exists) {
+            return prev;
+          }
+          return [...prev, listItem];
+        });
         
         return listItem;
       } catch (err) {
@@ -278,12 +300,22 @@ export const useMessages = (
       try {
         const message = await sendPrescription(data);
         
-        // Optimistically add message to list (will be updated by WebSocket)
+        // Mark as seen immediately to prevent duplicate from WebSocket echo
+        messageIdsRef.current.add(message.id);
+        
+        // Optimistically add message to list (will be updated by WebSocket if different)
         const listItem: MessageListItem = {
           ...message,
         };
         
-        setMessages((prev) => [...prev, listItem]);
+        setMessages((prev) => {
+          // Check if already exists (defensive)
+          const exists = prev.some((m) => m.id === message.id);
+          if (exists) {
+            return prev;
+          }
+          return [...prev, listItem];
+        });
         
         return listItem;
       } catch (err) {
