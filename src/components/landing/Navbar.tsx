@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/config/routes";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
+import { getUserTypeLabel } from "@/utils/user.utils";
 import { useState, useEffect, useRef } from "react";
 
 const nav_links = [
@@ -23,6 +24,7 @@ export default function LandingNavbar() {
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isShopOwner = user?.type === "shop_keeper" || (user?.type as string) === "shop_owner";
+  const userTypeLabel = user ? getUserTypeLabel(user.type) : "";
 
   // Handle loading timeout - if loading takes more than 3 seconds, show Sign In button
   useEffect(() => {
@@ -137,6 +139,15 @@ export default function LandingNavbar() {
                     alt={user.name || "User"}
                   />
                 </span>
+                {/* Name and User Type (desktop only) */}
+                <div className="mr-1 hidden flex-col items-start sm:flex">
+                  <span className="font-medium text-sm">
+                    {user.name || "User"}
+                  </span>
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+                    {userTypeLabel}
+                  </span>
+                </div>
                 <svg
                   className={`stroke-gray-500 transition-transform duration-200 dark:stroke-gray-400 ${
                     isDropdownOpen ? "rotate-180" : ""
@@ -164,6 +175,20 @@ export default function LandingNavbar() {
                   onClose={closeDropdown}
                   className="absolute right-0 mt-2 flex w-[200px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
                 >
+                  {/* User Info Header */}
+                  <div className="mb-3 border-b border-gray-200 pb-3 dark:border-gray-800">
+                    <span className="block font-medium text-sm text-gray-800 dark:text-gray-200">
+                      {user.name || "User"}
+                    </span>
+                    {user.email && (
+                      <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+                        {user.email}
+                      </span>
+                    )}
+                    <span className="mt-1 block text-xs font-bold text-gray-600 dark:text-gray-400">
+                      {userTypeLabel}
+                    </span>
+                  </div>
                   <ul className="flex flex-col gap-1">
                     <li>
                       <DropdownItem
@@ -253,6 +278,20 @@ export default function LandingNavbar() {
                   onClose={closeDropdown}
                   className="absolute right-0 mt-2 flex w-[200px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
                 >
+                  {/* User Info Header */}
+                  <div className="mb-3 border-b border-gray-200 pb-3 dark:border-gray-800">
+                    <span className="block font-medium text-sm text-gray-800 dark:text-gray-200">
+                      {user.name || "User"}
+                    </span>
+                    {user.email && (
+                      <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+                        {user.email}
+                      </span>
+                    )}
+                    <span className="mt-1 block text-xs font-bold text-gray-600 dark:text-gray-400">
+                      {userTypeLabel}
+                    </span>
+                  </div>
                   <ul className="flex flex-col gap-1">
                     <li>
                       <DropdownItem

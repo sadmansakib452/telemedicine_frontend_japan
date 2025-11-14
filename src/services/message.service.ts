@@ -21,6 +21,47 @@ import type {
 } from '@/types/message.types';
 
 /**
+ * Get a single message by ID
+ * 
+ * Returns a message (text or prescription) by ID.
+ * Works for all user types (doctors, patients, shop owners, admins).
+ * 
+ * Authorization: User must be sender, receiver, or conversation participant.
+ * 
+ * @param id Message ID (prescription ID)
+ * @returns Promise resolving to message
+ */
+export const getMessageById = async (id: string): Promise<Message> => {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new Error('No access token available');
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ROUTES.MESSAGE.DETAIL(id)}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const result: MessageResponse = await response.json();
+
+    if (!response.ok) {
+      throw parseApiError({ ...result, statusCode: response.status });
+    }
+
+    return result.data;
+  } catch (error) {
+    throw parseApiError(error);
+  }
+};
+
+/**
  * Get messages for a conversation
  * 
  * Returns messages for a specific conversation with cursor-based pagination.

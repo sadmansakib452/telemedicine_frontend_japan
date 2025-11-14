@@ -68,6 +68,7 @@ export const API_ROUTES = {
     BASE: '/chat/message',
     LIST: '/chat/message',
     SEND: '/chat/message',
+    DETAIL: (id: string) => `/chat/message/${id}`,
     UPDATE_STATUS: (id: string) => `/chat/message/${id}/status`,
   },
   

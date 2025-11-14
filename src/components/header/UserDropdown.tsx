@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserTypeLabel } from "@/utils/user.utils";
 
 export default function UserDropdown() {
   const { user, logout } = useAuth();
@@ -35,6 +36,7 @@ export default function UserDropdown() {
   const displayName = user.name || "User";
   const email = user.email || "—";
   const avatarSrc = user.avatar_url || user.avatar || "/images/user/owner.jpg";
+  const userTypeLabel = getUserTypeLabel(user.type);
 
   return (
     <div className="relative">
@@ -46,9 +48,15 @@ export default function UserDropdown() {
           <Image width={44} height={44} src={avatarSrc} alt={displayName} />
         </span>
 
-        <span className="mr-1 hidden font-medium text-theme-sm sm:block">
-          {displayName}
-        </span>
+        {/* Name and User Type (desktop only) */}
+        <div className="mr-1 hidden flex-col items-start sm:flex">
+          <span className="font-medium text-theme-sm">
+            {displayName}
+          </span>
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            {userTypeLabel}
+          </span>
+        </div>
 
         <svg
           className={`stroke-gray-500 transition-transform duration-200 dark:stroke-gray-400 ${
@@ -81,6 +89,9 @@ export default function UserDropdown() {
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             {email}
+          </span>
+          <span className="mt-1 block text-xs font-bold text-gray-600 dark:text-gray-400">
+            {userTypeLabel}
           </span>
         </div>
 
