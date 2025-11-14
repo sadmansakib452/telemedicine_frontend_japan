@@ -5,7 +5,7 @@
  * Handles login, register, logout, token refresh, and user profile management.
  */
 
-import { apiPost, apiGet, apiPatch, apiUpload } from '@/utils/api-client';
+import { apiPost, apiGet, apiUpload } from '@/utils/api-client';
 import { handleApiError } from '@/utils/error-handler';
 import { API_ROUTES } from '@/config/routes';
 import type {
@@ -182,6 +182,7 @@ export const getCurrentUser = async (): Promise<User> => {
 /**
  * Update user profile
  * 
+ * Always uses multipart/form-data (required by backend even without file upload)
  * Supports avatar upload via multipart/form-data
  * Old avatar is deleted on upload
  * 
@@ -193,44 +194,117 @@ export const updateUser = async (
   data: UpdateUserRequest
 ): Promise<User> => {
   try {
-    // Check if avatar file is included (multipart/form-data)
+    // Always use multipart/form-data (required by backend)
+    const formData = new FormData();
+    
+    // Add text fields (only if provided)
+    if (data.name) formData.append('name', data.name);
+    if (data.first_name) formData.append('first_name', data.first_name);
+    if (data.last_name) formData.append('last_name', data.last_name);
+    if (data.email) formData.append('email', data.email);
+    if (data.address) formData.append('address', data.address);
+    if (data.phone_number) formData.append('phone_number', data.phone_number);
+    
+    // Add avatar file if included (field name: 'image')
     if (data.image && data.image instanceof File) {
-      const formData = new FormData();
-      
-      // Add text fields
-      if (data.name) formData.append('name', data.name);
-      if (data.first_name) formData.append('first_name', data.first_name);
-      if (data.last_name) formData.append('last_name', data.last_name);
-      if (data.email) formData.append('email', data.email);
-      if (data.address) formData.append('address', data.address);
-      if (data.phone_number) formData.append('phone_number', data.phone_number);
-      
-      // Add avatar file (field name: 'image')
       formData.append('image', data.image);
-      
-      const response = await apiUpload<ApiResponse<User>>(
-        API_ROUTES.AUTH.UPDATE,
-        formData
-      );
-      
-      if (!response.data.data) {
-        throw new Error('User data not found in response');
-      }
-      
-      return response.data.data;
-    } else {
-      // Regular JSON update (no file)
-      const response = await apiPatch<ApiResponse<User>>(
-        API_ROUTES.AUTH.UPDATE,
-        data
-      );
-      
-      if (!response.data.data) {
-        throw new Error('User data not found in response');
-      }
-      
-      return response.data.data;
     }
+    
+    // Use PATCH method with multipart/form-data
+    const response = await apiUpload<ApiResponse<User>>(
+      API_ROUTES.AUTH.UPDATE,
+      formData,
+      { method: 'PATCH' }
+    );
+    
+    if (!response.data.data) {
+      throw new Error('User data not found in response');
+    }
+    
+    return response.data.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
+ * Update user profile (name, first_name, last_name only)
+ * 
+ * Simplified version for profile page that only updates name fields.
+ * Always uses multipart/form-data (required by backend).
+ * 
+ * @param profileData Profile data (name, first_name, last_name)
+ * @returns Success response
+ * @throws ApiError if update fails
+ */
+export const updateUserProfile = async (profileData: {
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+}): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Always use multipart/form-data (required by backend)
+    const formData = new FormData();
+    
+    // Add fields only if provided (trim whitespace)
+    let hasFields = false;
+    if (profileData.name && profileData.name.trim()) {
+      formData.append('name', profileData.name.trim());
+      hasFields = true;
+    }
+    if (profileData.first_name && profileData.first_name.trim()) {
+      formData.append('first_name', profileData.first_name.trim());
+      hasFields = true;
+    }
+    if (profileData.last_name && profileData.last_name.trim()) {
+      formData.append('last_name', profileData.last_name.trim());
+      hasFields = true;
+    }
+    
+    // Check if formData has any entries - backend might require at least one field
+    if (!hasFields) {
+      throw new Error('At least one field must be provided to update');
+    }
+    
+    // Use PATCH method with multipart/form-data
+    const response = await apiUpload<{ success: boolean; message: string }>(
+      API_ROUTES.AUTH.UPDATE,
+      formData,
+      { method: 'PATCH' }
+    );
+    
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+/**
+ * Change user password
+ * 
+ * Requires old password for verification.
+ * Email is not required (backend uses JWT token to identify user).
+ * 
+ * @param oldPassword Current password
+ * @param newPassword New password (minimum 8 characters)
+ * @returns Success response
+ * @throws ApiError if password change fails
+ */
+export const changePassword = async (
+  oldPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await apiPost<{ success: boolean; message: string }>(
+      API_ROUTES.AUTH.CHANGE_PASSWORD,
+      {
+        old_password: oldPassword,
+        new_password: newPassword,
+        // Note: email is NOT required - backend uses JWT token
+      }
+    );
+    
+    return response.data;
   } catch (error) {
     throw handleApiError(error);
   }

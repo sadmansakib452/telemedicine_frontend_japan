@@ -31,6 +31,9 @@ export const PROTECTED_ROUTES = {
   PRESCRIPTIONS_INBOX: '/prescriptions-inbox',
   PRESCRIPTION_DETAIL: (id: string) => `/prescriptions-inbox/${id}`,
   
+  // Profile (all authenticated users)
+  PROFILE: '/profile',
+  
   // Admin routes
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/dashboard/users',
@@ -52,6 +55,7 @@ export const API_ROUTES = {
     REFRESH_TOKEN: '/auth/refresh-token',
     ME: '/auth/me',
     UPDATE: '/auth/update',
+    CHANGE_PASSWORD: '/auth/change-password',
   },
   
   // Conversation routes
@@ -136,6 +140,7 @@ export const RouteHelpers = {
     return path.startsWith('/conversations') || 
            path.startsWith('/broadcasts-inbox') || 
            path.startsWith('/prescriptions-inbox') ||
+           path.startsWith('/profile') ||
            path.startsWith('/admin');
   },
   

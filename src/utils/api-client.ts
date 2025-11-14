@@ -53,27 +53,49 @@ export const createApiUrl = (endpoint: string): string => {
  * Create API request headers
  * 
  * @param options Request options
+ * @param body Request body (to detect FormData)
  * @returns Request headers
  */
 export const createApiHeaders = async (
-  options: ApiRequestOptions = {}
+  options: ApiRequestOptions = {},
+  body?: BodyInit | null
 ): Promise<Record<string, string>> => {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
+  
+  // Only set Content-Type for non-FormData requests
+  // For FormData, browser will set Content-Type with boundary automatically
+  if (!(body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   
   // Merge existing headers
   if (options.headers) {
     if (options.headers instanceof Headers) {
       options.headers.forEach((value, key) => {
+        // Don't override Content-Type for FormData
+        if (body instanceof FormData && key.toLowerCase() === 'content-type') {
+          return; // Skip Content-Type header for FormData
+        }
         headers[key] = value;
       });
     } else if (Array.isArray(options.headers)) {
       options.headers.forEach(([key, value]) => {
+        // Don't override Content-Type for FormData
+        if (body instanceof FormData && key.toLowerCase() === 'content-type') {
+          return; // Skip Content-Type header for FormData
+        }
         headers[key] = value;
       });
     } else {
-      Object.assign(headers, options.headers);
+      // Handle Record<string, string> headers
+      const headersObj = options.headers as Record<string, string>;
+      Object.keys(headersObj).forEach((key) => {
+        // Don't override Content-Type for FormData
+        if (body instanceof FormData && key.toLowerCase() === 'content-type') {
+          return; // Skip Content-Type header for FormData
+        }
+        headers[key] = headersObj[key];
+      });
     }
   }
   
@@ -117,8 +139,8 @@ export const apiRequest = async <T = unknown>(
     // Create API URL
     const url = createApiUrl(endpoint);
     
-    // Create headers
-    const headers = await createApiHeaders(options);
+    // Create headers (pass body to detect FormData)
+    const headers = await createApiHeaders(options, options.body);
     
     // Create request timeout
     const timeout = options.timeout || API_TIMEOUT;
@@ -135,8 +157,24 @@ export const apiRequest = async <T = unknown>(
     
     // Check if response is ok
     if (!response.ok) {
-      // Parse error response
-      const errorData = await response.json().catch(() => ({}));
+      // Parse error response - handle both JSON and text/HTML responses
+      let errorData: any = {};
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          // If JSON parsing fails, try to get text
+          const text = await response.text().catch(() => '');
+          errorData = { message: text || 'An error occurred' };
+        }
+      } else {
+        // Non-JSON response (text, HTML, etc.)
+        const text = await response.text().catch(() => '');
+        errorData = { message: text || 'An error occurred' };
+      }
+      
       throw handleApiError({
         response: {
           data: errorData,
@@ -146,8 +184,17 @@ export const apiRequest = async <T = unknown>(
       });
     }
     
-    // Parse response
-    const data = (await response.json().catch(() => ({}))) as T;
+    // Parse response - only if content-type is JSON
+    const contentType = response.headers.get('content-type');
+    let data: T;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = (await response.json().catch(() => ({} as T))) as T;
+    } else {
+      // Non-JSON response (shouldn't happen for API responses, but handle it)
+      const text = await response.text().catch(() => '');
+      data = { success: false, message: text } as T;
+    }
     
     return {
       data,
@@ -264,7 +311,7 @@ export const apiDelete = <T = unknown>(
  * 
  * @param endpoint API endpoint
  * @param formData FormData object
- * @param options Request options
+ * @param options Request options (can override method for PATCH, etc.)
  * @returns API response
  */
 export const apiUpload = <T = unknown>(
@@ -285,7 +332,7 @@ export const apiUpload = <T = unknown>(
   
   return apiRequest<T>(endpoint, {
     ...options,
-    method: 'POST',
+    method: options.method || 'POST', // Allow method override (e.g., PATCH)
     headers,
     body: formData,
   });
