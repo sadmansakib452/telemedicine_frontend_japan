@@ -83,33 +83,33 @@ export default function LandingNavbar() {
   };
 
   return (
-    <header className="absolute inset-x-0 top-0 z-50">
-      <div className="mx-auto flex max-w-(--breakpoint-2xl) items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-3">
+    <header className="absolute inset-x-0 top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-800/50">
+      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-nowrap items-center justify-between gap-4 px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
+        <Link href="/" className="flex-shrink-0">
           <Image
-            src="/images/logo/logo.svg"
+            src="/images/logo/logo.png"
             alt="QuickMed Connect"
-            width={150}
+            width={40}
             height={40}
-            className="dark:hidden"
+            className="h-8 w-8 object-contain dark:hidden sm:h-10 sm:w-10"
             priority
           />
           <Image
             src="/images/logo/logo-dark.svg"
             alt="QuickMed Connect"
-            width={150}
-            height={40}
-            className="hidden dark:block"
+            width={120}
+            height={31}
+            className="hidden h-8 w-auto object-contain dark:block sm:h-10"
             priority
           />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-gray-700 dark:text-gray-300 lg:flex">
+        <nav className="hidden items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 sm:gap-3 lg:flex">
           {nav_links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="transition-colors hover:text-brand-500 dark:hover:text-brand-400"
+              className="flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 font-medium transition-colors hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-white/5 dark:hover:text-brand-400 sm:px-4 sm:py-2"
             >
               {link.label}
             </Link>
@@ -117,7 +117,7 @@ export default function LandingNavbar() {
         </nav>
 
         {/* Desktop Auth Buttons */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden flex-shrink-0 items-center gap-2 sm:gap-3 lg:flex">
           {isLoading && !showSignIn ? (
             // Loading state (only show for first 3 seconds)
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
@@ -141,7 +141,7 @@ export default function LandingNavbar() {
                 </span>
                 {/* Name and User Type (desktop only) */}
                 <div className="mr-1 hidden flex-col items-start sm:flex">
-                  <span className="font-medium text-sm">
+                  <span className="font-medium text-theme-sm">
                     {user.name || "User"}
                   </span>
                   <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
@@ -229,28 +229,28 @@ export default function LandingNavbar() {
             </div>
           ) : (
             // Not authenticated state
-            <>
+            <div className="flex items-center gap-2">
               <Link
                 href={PUBLIC_ROUTES.LOGIN}
-                className="rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300 sm:px-4 sm:py-2"
               >
                 Sign In
               </Link>
               <Link
                 href={PUBLIC_ROUTES.REGISTER}
-                className="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 dark:text-white"
+                className="gradient-button rounded-lg px-3 py-1.5 text-sm font-semibold text-white sm:px-4 sm:py-2"
               >
                 Join Now
               </Link>
-            </>
+            </div>
           )}
         </div>
 
         {/* Mobile Auth Buttons */}
-        <div className="flex items-center gap-3 lg:hidden">
+        <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3 lg:hidden">
           {isLoading && !showSignIn ? (
             // Loading state (only show for first 3 seconds)
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
           ) : isAuthenticated && user && !showSignIn ? (
             // Authenticated state - Mobile profile dropdown
             <div className="relative">
@@ -261,10 +261,10 @@ export default function LandingNavbar() {
                 }}
                 className="flex items-center text-gray-700 transition hover:text-brand-500 dark:text-gray-300"
               >
-                <span className="h-10 w-10 overflow-hidden rounded-full">
+                <span className="h-11 w-11 overflow-hidden rounded-full">
                   <Image
-                    width={40}
-                    height={40}
+                    width={44}
+                    height={44}
                     src={user.avatar_url || user.avatar || "/images/user/owner.jpg"}
                     alt={user.name || "User"}
                   />
@@ -332,20 +332,20 @@ export default function LandingNavbar() {
             </div>
           ) : (
             // Not authenticated state
-            <>
+            <div className="flex items-center gap-2">
               <Link
                 href={PUBLIC_ROUTES.LOGIN}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-brand-200 hover:text-brand-500 dark:border-gray-800 dark:text-gray-300 dark:hover:border-brand-500/30 dark:hover:text-brand-400"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300 sm:px-4 sm:py-2"
               >
                 Sign In
               </Link>
               <Link
                 href={PUBLIC_ROUTES.REGISTER}
-                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 dark:text-white"
+                className="gradient-button rounded-lg px-3 py-1.5 text-sm font-semibold text-white sm:px-4 sm:py-2"
               >
-                Join
+                Join Now
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>

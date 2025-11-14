@@ -738,3 +738,207 @@ span.flatpickr-weekday,
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
+
+/* Animated Gradient Backgrounds */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gradient-mesh {
+  0% {
+    background-position: 0% 0%, 100% 100%, 50% 50%;
+  }
+  33% {
+    background-position: 100% 0%, 0% 100%, 50% 50%;
+  }
+  66% {
+    background-position: 100% 100%, 0% 0%, 50% 50%;
+  }
+  100% {
+    background-position: 0% 0%, 100% 100%, 50% 50%;
+  }
+}
+
+/* Animated Gradient Background */
+.gradient-animated {
+  background: linear-gradient(
+    135deg,
+    #465fff 0%,
+    #7a5af8 25%,
+    #ee46bc 50%,
+    #0ba5ec 75%,
+    #465fff 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Animated Gradient Mesh */
+.gradient-mesh {
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-mesh::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 50%, rgba(70, 95, 255, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(122, 90, 248, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 40% 20%, rgba(238, 70, 188, 0.3) 0%, transparent 50%);
+  animation: gradient-rotate 20s linear infinite;
+  pointer-events: none;
+}
+
+.gradient-mesh::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(70, 95, 255, 0.1) 0%,
+    rgba(122, 90, 248, 0.1) 25%,
+    rgba(238, 70, 188, 0.1) 50%,
+    rgba(11, 165, 236, 0.1) 75%,
+    rgba(70, 95, 255, 0.1) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 20s ease infinite;
+  pointer-events: none;
+}
+
+/* Gradient Button */
+.gradient-button {
+  background: linear-gradient(135deg, #465fff 0%, #7a5af8 50%, #ee46bc 100%);
+  background-size: 200% 200%;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(70, 95, 255, 0.4);
+}
+
+.gradient-button:hover {
+  background-position: 100% 0%;
+  box-shadow: 0 6px 20px rgba(238, 70, 188, 0.5);
+  transform: translateY(-2px);
+}
+
+.gradient-button:active {
+  transform: translateY(0);
+}
+
+/* Gradient Card */
+.gradient-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.gradient-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #465fff 0%, #7a5af8 50%, #ee46bc 100%);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.gradient-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(70, 95, 255, 0.2);
+}
+
+.dark .gradient-card {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient Pill */
+.gradient-pill {
+  background: linear-gradient(135deg, rgba(70, 95, 255, 0.1) 0%, rgba(122, 90, 248, 0.1) 50%, rgba(238, 70, 188, 0.1) 100%);
+  border: 1px solid rgba(70, 95, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.gradient-pill:hover {
+  background: linear-gradient(135deg, rgba(70, 95, 255, 0.2) 0%, rgba(122, 90, 248, 0.2) 50%, rgba(238, 70, 188, 0.2) 100%);
+  border-color: rgba(70, 95, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(70, 95, 255, 0.2);
+}
+
+.dark .gradient-pill {
+  background: linear-gradient(135deg, rgba(70, 95, 255, 0.15) 0%, rgba(122, 90, 248, 0.15) 50%, rgba(238, 70, 188, 0.15) 100%);
+  border-color: rgba(70, 95, 255, 0.3);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #465fff 0%, #7a5af8 50%, #ee46bc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient Dot */
+.gradient-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #465fff 0%, #ee46bc 100%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-animated,
+  .gradient-mesh::before,
+  .gradient-mesh::after,
+  .gradient-card::before,
+  .gradient-dot {
+    animation: none;
+  }
+  
+  .gradient-button:hover,
+  .gradient-card:hover,
+  .gradient-pill:hover {
+    transform: none;
+  }
+}
