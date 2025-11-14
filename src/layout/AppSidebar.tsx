@@ -1,37 +1,56 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import { ChatIcon, HorizontaLDots } from "../icons/index";
+import { ChatIcon, HorizontaLDots, MailIcon } from "../icons/index";
+import { useAuth } from "@/hooks/useAuth";
+import { PROTECTED_ROUTES } from "@/config/routes";
+type NavItem = {
+  name: string;
+  icon: React.ReactNode;
+  path: string;
+};
 type NavSection = {
   title: string;
-  items: {
-    name: string;
-    icon: React.ReactNode;
-    path: string;
-  }[];
+  items: NavItem[];
 };
-
-const nav_sections: NavSection[] = [
-  {
-    title: "Workspace",
-    items: [
-      {
-        name: "Chats",
-        icon: <ChatIcon />,
-        path: "/inbox",
-      },
-    ],
-  },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const { user } = useAuth();
 
-  const isActive = (path: string) => path === pathname;
+  const nav_sections = useMemo<NavSection[]>(() => {
+    const workspaceItems: NavItem[] = [
+      {
+        name: "Conversations",
+        icon: <ChatIcon />,
+        path: PROTECTED_ROUTES.CONVERSATIONS,
+      },
+    ];
+
+    if (user?.type === "doctor") {
+      workspaceItems.push({
+        name: "Broadcasts",
+        icon: <MailIcon />,
+        path: PROTECTED_ROUTES.BROADCASTS_INBOX,
+      });
+    }
+
+    return [
+      {
+        title: "Workspace",
+        items: workspaceItems,
+      },
+    ];
+  }, [user?.type]);
+
+  const isActive = (path: string) => {
+    if (!pathname) return false;
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
     <aside

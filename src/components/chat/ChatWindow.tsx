@@ -1,19 +1,80 @@
 "use client";
 
 import Image from "next/image";
-import { PaperPlaneIcon } from "@/icons";
-import type { Conversation } from "./InboxWorkspace";
+import MessageList from "@/components/message/MessageList";
+import MessageInput from "@/components/message/MessageInput";
+import type { Conversation } from "@/types/conversation.types";
+import type { MessageListItem } from "@/types/message.types";
+import type { User } from "@/types/user.types";
+import type { ConversationType } from "@/config/constants";
+import type { PrescriptionFormData } from "@/types/prescription.types";
 
-type ChatWindowProps = {
-  conversation: Conversation;
-  onBack: () => void;
+/**
+ * Display format for conversation (from InboxWorkspace)
+ */
+type ConversationDisplay = {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+  preview: string;
+  timeAgo: string;
+  avatar: string;
+  online?: boolean;
 };
 
-export default function ChatWindow({ conversation, onBack }: ChatWindowProps) {
-  const { name, role, status, avatar, messages } = conversation;
+type ChatWindowProps = {
+  conversation: ConversationDisplay;
+  conversationData: Conversation;
+  currentUser: User;
+  messages: MessageListItem[];
+  isLoading?: boolean;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
+  onBack: () => void;
+  onSendMessage: (message: string) => Promise<void>;
+  onSendPrescription?: (data: PrescriptionFormData) => Promise<void>;
+  onLoadMoreMessages?: () => void;
+  onViewPrescription?: (prescriptionId: string) => void;
+};
+
+export default function ChatWindow({
+  conversation,
+  conversationData,
+  currentUser,
+  messages,
+  isLoading = false,
+  isLoadingMore = false,
+  hasMore = false,
+  onBack,
+  onSendMessage,
+  onSendPrescription,
+  onLoadMoreMessages,
+  onViewPrescription,
+}: ChatWindowProps) {
+  const { name, role, status, avatar, online } = conversation;
+
+  // Get receiver ID and other person info
+  const receiverId =
+    conversationData.creator_id === currentUser.id
+      ? conversationData.participant_id
+      : conversationData.creator_id;
+
+  const otherPerson =
+    conversationData.creator_id === currentUser.id
+      ? conversationData.participant
+      : conversationData.creator;
+
+  // Get patient name for prescription (if doctor in patient_doctor conversation)
+  const patientName =
+    currentUser.type === "doctor" &&
+    conversationData.type === "patient_doctor"
+      ? otherPerson.name
+      : undefined;
 
   return (
     <section className="flex h-full w-full flex-col overflow-hidden rounded-[32px] border border-gray-200 bg-white shadow-theme-xl dark:border-gray-800 dark:bg-gray-900">
+      {/* Header */}
       <header className="flex items-center gap-4 border-b border-gray-200 px-6 py-5 dark:border-gray-800 sm:px-8 sm:py-6">
         <button
           type="button"
@@ -45,7 +106,9 @@ export default function ChatWindow({ conversation, onBack }: ChatWindowProps) {
             height={48}
             className="h-full w-full object-cover"
           />
-          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-success-500 dark:border-gray-900" />
+          {online && (
+            <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-success-500 dark:border-gray-900" />
+          )}
         </span>
         <div>
           <h2 className="text-base font-semibold text-gray-900 dark:text-white/90 sm:text-lg">
@@ -57,56 +120,30 @@ export default function ChatWindow({ conversation, onBack }: ChatWindowProps) {
         </div>
       </header>
 
-      <div className="flex-1 space-y-6 overflow-y-auto bg-gray-50 px-5 py-6 custom-scrollbar dark:bg-gray-900/40 sm:px-8">
-        {messages.map((message) => {
-          const isOutgoing = message.variant === "outgoing";
-          return (
-            <div
-              key={message.id}
-              className={`flex items-end gap-3 ${
-                isOutgoing ? "flex-row-reverse text-right" : ""
-              }`}
-            >
-              <span className="inline-flex h-10 w-10 overflow-hidden rounded-full sm:h-12 sm:w-12">
-                <Image
-                  src={message.avatar}
-                  alt={message.author}
-                  width={48}
-                  height={48}
-                  className="h-full w-full object-cover"
-                />
-              </span>
-              <div className="max-w-2xl">
-                <div
-                  className={`inline-flex rounded-3xl px-4 py-3 text-sm leading-6 sm:px-5 sm:py-4 ${
-                    isOutgoing
-                      ? "bg-brand-500 text-white shadow-theme-sm"
-                      : "bg-white text-gray-700 shadow-theme-sm dark:bg-gray-900 dark:text-gray-200"
-                  }`}
-                >
-                  {message.text}
-                </div>
-                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                  {message.time}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Messages List */}
+      <MessageList
+        messages={messages}
+        currentUserId={currentUser.id}
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMore={hasMore}
+        onLoadMore={onLoadMoreMessages}
+        onViewPrescription={onViewPrescription}
+      />
 
-      <footer className="border-t border-gray-200 px-5 py-5 dark:border-gray-800 sm:px-8">
-        <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-5 py-3 shadow-theme-xs focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900">
-          <input
-            type="text"
-            placeholder="Type a message"
-            className="flex-1 bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400 dark:text-gray-200 dark:placeholder:text-gray-500"
-          />
-          <button className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 text-white shadow-theme-xs transition hover:bg-brand-600">
-            <PaperPlaneIcon className="h-4 w-4" />
-          </button>
-        </div>
-      </footer>
+      {/* Message Input */}
+      <MessageInput
+        onSend={onSendMessage}
+        onSendPrescription={onSendPrescription}
+        isLoading={isLoading}
+        disabled={isLoading}
+        placeholder="Type a message"
+        conversationType={conversationData.type as ConversationType}
+        currentUserType={currentUser.type}
+        patientName={patientName}
+        receiverId={receiverId}
+        conversationId={conversationData.id}
+      />
     </section>
   );
 }
