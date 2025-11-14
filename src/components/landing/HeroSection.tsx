@@ -134,32 +134,17 @@ export default function HeroSection() {
             </div>
           ) : null}
 
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            {isAuthenticated && !isAuthLoading ? (
+          {/* Action Buttons - Only show "Go to Inbox" for authenticated non-admin users */}
+          {isAuthenticated && !isAuthLoading && user?.type !== USER_TYPES.ADMIN && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href={getInboxRoute()}
                 className="gradient-button inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white"
               >
                 Go to Inbox
               </Link>
-            ) : (
-              <>
-                <Link
-                  href={PUBLIC_ROUTES.LOGIN}
-                  className="gradient-button inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href={PUBLIC_ROUTES.REGISTER}
-                  className="inline-flex items-center justify-center rounded-lg border-2 border-brand-500/30 bg-white/80 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-brand-600 transition-all hover:border-brand-500/50 hover:bg-white dark:bg-gray-800/80 dark:border-brand-500/40 dark:text-brand-400 dark:hover:border-brand-500/60"
-                >
-                  Create an Account
-                </Link>
-              </>
-            )}
-          </div>
+            </div>
+          )}
 
           <ul className="grid gap-3 pt-2 text-sm text-gray-700 dark:text-gray-300 sm:grid-cols-3 sm:gap-4">
             {feature_pills.map((pill) => (

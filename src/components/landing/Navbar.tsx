@@ -8,6 +8,7 @@ import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/config/routes";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
 import { getUserTypeLabel } from "@/utils/user.utils";
+import { USER_TYPES } from "@/config/constants";
 import { useState, useEffect, useRef } from "react";
 
 const nav_links = [
@@ -24,6 +25,7 @@ export default function LandingNavbar() {
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isShopOwner = user?.type === "shop_keeper" || (user?.type as string) === "shop_owner";
+  const isAdmin = user?.type === USER_TYPES.ADMIN;
   const userTypeLabel = user ? getUserTypeLabel(user.type) : "";
 
   // Handle loading timeout - if loading takes more than 3 seconds, show Sign In button
@@ -198,14 +200,25 @@ export default function LandingNavbar() {
                         Profile
                       </DropdownItem>
                     </li>
-                    <li>
-                      <DropdownItem
-                        onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
-                      >
-                        Inbox
-                      </DropdownItem>
-                    </li>
+                    {isAdmin ? (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.ADMIN_DASHBOARD)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Dashboard
+                        </DropdownItem>
+                      </li>
+                    ) : (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Inbox
+                        </DropdownItem>
+                      </li>
+                    )}
                     {isShopOwner && (
                       <li>
                         <DropdownItem
@@ -301,14 +314,25 @@ export default function LandingNavbar() {
                         Profile
                       </DropdownItem>
                     </li>
-                    <li>
-                      <DropdownItem
-                        onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
-                      >
-                        Inbox
-                      </DropdownItem>
-                    </li>
+                    {isAdmin ? (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.ADMIN_DASHBOARD)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Dashboard
+                        </DropdownItem>
+                      </li>
+                    ) : (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Inbox
+                        </DropdownItem>
+                      </li>
+                    )}
                     {isShopOwner && (
                       <li>
                         <DropdownItem

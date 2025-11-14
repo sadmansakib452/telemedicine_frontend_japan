@@ -183,10 +183,10 @@ export default function ConversationDetailWorkspace({
             Error: {conversationError.message}
           </p>
           <button
-            onClick={() => router.push("/conversations")}
+            onClick={() => router.back()}
             className="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white transition hover:bg-brand-600"
           >
-            Back to Conversations
+            Go Back
           </button>
         </div>
       </div>
@@ -202,10 +202,10 @@ export default function ConversationDetailWorkspace({
             Conversation not found.
           </p>
           <button
-            onClick={() => router.push("/conversations")}
+            onClick={() => router.back()}
             className="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white transition hover:bg-brand-600"
           >
-            Back to Conversations
+            Go Back
           </button>
         </div>
       </div>

@@ -21,6 +21,7 @@ export default function AdminPrescriptionsPage() {
     prescription,
     isModalOpen,
     isLoading: isPrescriptionLoading,
+    error: prescriptionError,
     openModal,
     closeModal,
   } = usePrescription("admin");
@@ -89,13 +90,13 @@ export default function AdminPrescriptionsPage() {
       )}
 
       {/* Prescription Modal */}
-      {isModalOpen && (
-        <PrescriptionModal
-          prescription={prescription}
-          isLoading={isPrescriptionLoading}
-          onClose={closeModal}
-        />
-      )}
+      <PrescriptionModal
+        prescription={prescription}
+        isLoading={isPrescriptionLoading}
+        error={prescriptionError}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   );
 }
