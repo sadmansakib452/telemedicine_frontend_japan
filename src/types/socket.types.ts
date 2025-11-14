@@ -62,7 +62,30 @@ export interface MessageEvent extends BaseSocketEvent {
  * Trigger: Doctor sends prescription (distributed to shop owner)
  */
 export interface NewPrescriptionEvent extends BaseSocketEvent {
-  prescription: Message; // Prescription message
+  prescription: {
+    id: string;
+    message: string | null;
+    message_type: 'prescription';
+    medicine_details: string;
+    patient_name: string;
+    sender_id: string;
+    receiver_id: string;
+    conversation_id: string;
+    status: string;
+    created_at: string;
+    sender: {
+      id: string;
+      name: string;
+      avatar?: string | null;
+      avatar_url?: string;
+    };
+    receiver?: {
+      id: string;
+      name: string;
+      avatar?: string | null;
+      avatar_url?: string;
+    };
+  };
   doctor: {
     id: string;
     name: string;

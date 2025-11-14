@@ -115,7 +115,7 @@ export default function ConversationsWorkspace() {
   
   // Listen to WebSocket message events to track unread state
   // When a new message arrives from someone else, mark conversation as unread
-  useSocket(user?.type as UserType | undefined, {
+  useSocket(user?.type as UserType | undefined, user?.id, {
     onMessage: (event: MessageEvent) => {
       if (!user || !event?.data) return;
       
@@ -136,7 +136,7 @@ export default function ConversationsWorkspace() {
     conversations,
     isLoading: isConversationsLoading,
     error: conversationsError,
-  } = useConversations(user?.type as UserType | undefined);
+  } = useConversations(user?.type as UserType | undefined, user?.id);
 
   // Fetch active conversation details
   const {
@@ -153,7 +153,7 @@ export default function ConversationsWorkspace() {
     sendMessage: handleSendMessage,
     sendPrescription: handleSendPrescription,
     loadMore: loadMoreMessages,
-  } = useMessages(activeConversationId, user?.type as UserType | undefined);
+  } = useMessages(activeConversationId, user?.type as UserType | undefined, user?.id);
 
   // Prescription viewing hook
   const {

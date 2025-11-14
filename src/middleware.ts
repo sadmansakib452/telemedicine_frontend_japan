@@ -129,10 +129,13 @@ export function middleware(request: NextRequest) {
   // Check if route requires admin role
   const isAdminRoute = RouteHelpers.isAdminRoute(pathname);
   
-  // Check if route requires doctor role
-  const isDoctorRoute = RouteHelpers.isDoctorRoute(pathname);
-  
-  // Handle public routes - allow access
+    // Check if route requires doctor role
+    const isDoctorRoute = RouteHelpers.isDoctorRoute(pathname);
+    
+    // Check if route requires shop owner role
+    const isShopOwnerRoute = RouteHelpers.isShopOwnerRoute(pathname);
+    
+    // Handle public routes - allow access
   if (isPublicRoute) {
     // If user is authenticated and tries to access auth pages, redirect to dashboard
     if ((pathname === PUBLIC_ROUTES.LOGIN || pathname === PUBLIC_ROUTES.REGISTER) && token) {
@@ -197,6 +200,21 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(PROTECTED_ROUTES.CONVERSATIONS, request.url));
       }
       // If userType is null or 'doctor', allow the request
+      // Component will verify using /auth/me endpoint
+    }
+    
+    // Check shop owner routes
+    // Note: Similar to doctor routes, we don't strictly enforce type check here
+    // Component will handle role check after fetching user data from /auth/me
+    if (isShopOwnerRoute) {
+      // Only redirect if we can definitively determine user is NOT a shop owner
+      // If userType is null/undefined, allow the request and let component handle it
+      const isShopOwner = userType === 'shop_keeper' || userType === 'shop_owner';
+      if (userType && !isShopOwner) {
+        // Not shop owner - redirect to conversations
+        return NextResponse.redirect(new URL(PROTECTED_ROUTES.CONVERSATIONS, request.url));
+      }
+      // If userType is null or shop owner, allow the request
       // Component will verify using /auth/me endpoint
     }
     

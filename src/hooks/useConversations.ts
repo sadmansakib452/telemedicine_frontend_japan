@@ -36,10 +36,12 @@ interface UseConversationsReturn {
  * Manages a list of conversations for the current user.
  * 
  * @param userType Current user type (for WebSocket event filtering)
+ * @param userId Current user ID (for WebSocket personal room joining)
  * @returns Conversation list and operations
  */
 export const useConversations = (
-  userType: UserType | undefined
+  userType: UserType | undefined,
+  userId?: string
 ): UseConversationsReturn => {
   const [conversations, setConversations] = useState<ConversationListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -178,7 +180,7 @@ export const useConversations = (
   /**
    * Setup WebSocket listeners for conversations and messages
    */
-  useSocket(userType, {
+  useSocket(userType, userId, {
     onConversation: handleConversation,
     onMessage: handleMessage, // Listen to messages to update conversation list
   });

@@ -38,7 +38,7 @@ export default function ConversationDetailWorkspace({
     sendMessage: handleSendMessage,
     sendPrescription: handleSendPrescription,
     loadMore: loadMoreMessages,
-  } = useMessages(conversationId, user?.type as UserType | undefined);
+  } = useMessages(conversationId, user?.type as UserType | undefined, user?.id);
 
   // Prescription viewing hook
   const {

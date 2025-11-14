@@ -21,10 +21,10 @@ export default function BroadcastsInboxWorkspace() {
     broadcasts,
     isLoading: isBroadcastsLoading,
     error: broadcastsError,
-  } = useBroadcasts(user?.type as UserType | undefined, "inbox");
+  } = useBroadcasts(user?.type as UserType | undefined, user?.id, "inbox");
 
   // Use conversations hook for responding to broadcasts
-  const { respondToBroadcast } = useConversations(user?.type as UserType | undefined);
+  const { respondToBroadcast } = useConversations(user?.type as UserType | undefined, user?.id);
 
   // Handle responding to a broadcast
   const handleRespondToBroadcast = async (broadcast: BroadcastListItem) => {

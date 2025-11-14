@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import { ChatIcon, HorizontaLDots, MailIcon } from "../icons/index";
+import { ChatIcon, HorizontaLDots, MailIcon, DocsIcon } from "../icons/index";
 import { useAuth } from "@/hooks/useAuth";
 import { PROTECTED_ROUTES } from "@/config/routes";
 type NavItem = {
@@ -36,6 +36,16 @@ const AppSidebar: React.FC = () => {
         name: "Broadcasts",
         icon: <MailIcon />,
         path: PROTECTED_ROUTES.BROADCASTS_INBOX,
+      });
+    }
+
+    // Add Prescriptions button for shop owners
+    const isShopOwner = user?.type === "shop_keeper" || (user?.type as string) === "shop_owner";
+    if (isShopOwner) {
+      workspaceItems.push({
+        name: "Prescriptions",
+        icon: <DocsIcon />,
+        path: PROTECTED_ROUTES.PRESCRIPTIONS_INBOX,
       });
     }
 

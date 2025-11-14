@@ -46,12 +46,14 @@ interface UseMessagesReturn {
  * 
  * @param conversationId Conversation ID
  * @param userType Current user type (for WebSocket event filtering)
+ * @param userId Current user ID (for WebSocket personal room joining)
  * @param limit Number of messages per page (default: 20)
  * @returns Message list and operations
  */
 export const useMessages = (
   conversationId: string | null,
   userType: UserType | undefined,
+  userId?: string,
   limit: number = 20
 ): UseMessagesReturn => {
   const [messages, setMessages] = useState<MessageListItem[]>([]);
@@ -132,7 +134,7 @@ export const useMessages = (
   /**
    * Setup WebSocket listeners for messages
    */
-  const { joinRoom, leaveRoom, isConnected } = useSocket(userType, {
+  const { joinRoom, leaveRoom, isConnected } = useSocket(userType, userId, {
     onMessage: handleMessage,
     onMessageStatusUpdated: handleMessageStatusUpdated,
   });

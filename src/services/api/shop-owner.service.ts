@@ -101,10 +101,14 @@ export const getShopOwnerPrescriptions = async (
       throw parseApiError({ ...result, statusCode: response.status });
     }
 
+    // Calculate hasMore: if count equals limit, there might be more pages
+    const limit = params?.limit || 20;
+    const hasMore = (result.count || result.data.length) === limit;
+
     return {
       prescriptions: result.data,
       cursor: result.cursor,
-      hasMore: result.data.length === (params?.limit || 20),
+      hasMore,
     };
   } catch (error) {
     throw parseApiError(error);
@@ -153,7 +157,10 @@ export const getShopOwnerPrescriptionById = async (id: string): Promise<Prescrip
       conversation_id: result.data.conversation_id,
       status: result.data.status,
       created_at: result.data.created_at,
+      updated_at: result.data.updated_at,
       sender: result.data.sender,
+      receiver: result.data.receiver,
+      conversation: result.data.conversation,
     };
 
     return prescription;

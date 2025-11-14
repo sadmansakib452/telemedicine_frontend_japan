@@ -41,11 +41,13 @@ interface UseSocketReturn {
  * Manages WebSocket connection and event listeners based on user type.
  * 
  * @param userType Current user type (for role-based event listeners)
+ * @param userId Current user ID (for joining personal room)
  * @param handlers Event handlers for WebSocket events
  * @returns WebSocket connection and operations
  */
 export const useSocket = (
   userType?: UserType,
+  userId?: string,
   handlers?: SocketEventHandlers
 ): UseSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -55,6 +57,7 @@ export const useSocket = (
   const socketRef = useRef<Socket | null>(null);
   const handlersRef = useRef<SocketEventHandlers | undefined>(handlers);
   const userTypeRef = useRef<UserType | undefined>(userType);
+  const userIdRef = useRef<string | undefined>(userId);
   const activeRoomsRef = useRef<Set<string>>(new Set());
 
   const cleanupEventListeners = useCallback((socketInstance: Socket) => {
@@ -87,11 +90,25 @@ export const useSocket = (
       setIsConnecting(false);
       setError(null);
 
+      // Join personal room if userId is provided (for user ID-based events)
+      // This is required for events like new_prescription, new_broadcast, etc.
+      const currentUserId = userIdRef.current;
+      if (currentUserId) {
+        joinRoom(socketInstance, currentUserId).catch((err) => {
+          console.error(`Failed to join personal room ${currentUserId}:`, err);
+        });
+        // Track personal room
+        activeRoomsRef.current.add(currentUserId);
+      }
+
       // Rejoin any active rooms after reconnect
       activeRoomsRef.current.forEach((roomId) => {
-        joinRoom(socketInstance, roomId).catch((err) => {
-          console.error(`Failed to rejoin room ${roomId}:`, err);
-        });
+        // Skip personal room as it's already joined above
+        if (roomId !== currentUserId) {
+          joinRoom(socketInstance, roomId).catch((err) => {
+            console.error(`Failed to rejoin room ${roomId}:`, err);
+          });
+        }
       });
 
       currentHandlers.onConnect?.();
@@ -164,6 +181,29 @@ export const useSocket = (
       setupEventListeners(socketRef.current);
     }
   }, [userType, setupEventListeners]);
+
+  // Effect to handle userId changes and rejoin personal room if needed
+  useEffect(() => {
+    const previousUserId = userIdRef.current;
+    userIdRef.current = userId;
+    
+    // If socket is connected and userId changed, rejoin personal room
+    if (socketRef.current && socketRef.current.connected && userId) {
+      // Leave old personal room if it exists and is different
+      if (previousUserId && previousUserId !== userId) {
+        leaveRoom(socketRef.current, previousUserId);
+        activeRoomsRef.current.delete(previousUserId);
+      }
+      
+      // Join new personal room if not already joined
+      if (!activeRoomsRef.current.has(userId)) {
+        joinRoom(socketRef.current, userId).catch((err) => {
+          console.error(`Failed to join personal room ${userId}:`, err);
+        });
+        activeRoomsRef.current.add(userId);
+      }
+    }
+  }, [userId]);
 
   /**
    * Connect to WebSocket

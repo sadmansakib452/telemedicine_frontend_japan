@@ -31,7 +31,16 @@ export interface PrescriptionListItem {
   conversation_id: string;
   status: string;
   created_at: string;
+  updated_at?: string;
   sender: User;
+  receiver?: User;
+  conversation?: {
+    id: string;
+    type: string;
+    status: string;
+    creator_id?: string;
+    participant_id?: string;
+  };
 }
 
 /**

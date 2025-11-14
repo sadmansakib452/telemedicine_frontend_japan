@@ -42,11 +42,13 @@ interface UseBroadcastsReturn {
  * Manages a list of broadcasts based on user type and list type.
  * 
  * @param userType Current user type
+ * @param userId Current user ID (for WebSocket personal room joining)
  * @param listType Type of broadcast list ('inbox' for doctors, 'patient' for patients)
  * @returns Broadcast list and operations
  */
 export const useBroadcasts = (
   userType: UserType | undefined,
+  userId?: string,
   listType: BroadcastListType = 'inbox'
 ): UseBroadcastsReturn => {
   const [broadcasts, setBroadcasts] = useState<BroadcastListItem[]>([]);
@@ -99,7 +101,7 @@ export const useBroadcasts = (
   /**
    * Setup WebSocket listeners for broadcasts
    */
-  const { socket, isConnected } = useSocket(userType, {
+  const { socket, isConnected } = useSocket(userType, userId, {
     onNewBroadcast: handleNewBroadcast,
     onBroadcastAssisted: handleBroadcastAssisted,
   });

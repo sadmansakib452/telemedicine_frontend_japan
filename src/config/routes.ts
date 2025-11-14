@@ -27,6 +27,10 @@ export const PROTECTED_ROUTES = {
   BROADCASTS_INBOX: '/broadcasts-inbox',
   BROADCAST_DETAIL: (id: string) => `/broadcasts-inbox/${id}`,
   
+  // Prescriptions (shop owners only)
+  PRESCRIPTIONS_INBOX: '/prescriptions-inbox',
+  PRESCRIPTION_DETAIL: (id: string) => `/prescriptions-inbox/${id}`,
+  
   // Admin routes
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/dashboard/users',
@@ -120,6 +124,7 @@ export const RouteHelpers = {
   isProtectedRoute: (path: string): boolean => {
     return path.startsWith('/conversations') || 
            path.startsWith('/broadcasts-inbox') || 
+           path.startsWith('/prescriptions-inbox') ||
            path.startsWith('/admin');
   },
   
@@ -135,6 +140,13 @@ export const RouteHelpers = {
    */
   isDoctorRoute: (path: string): boolean => {
     return path.startsWith('/broadcasts-inbox');
+  },
+  
+  /**
+   * Check if route requires shop owner role
+   */
+  isShopOwnerRoute: (path: string): boolean => {
+    return path.startsWith('/prescriptions-inbox');
   },
   
   /**
