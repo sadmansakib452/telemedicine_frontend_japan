@@ -12,9 +12,11 @@ import { useConversation } from "@/hooks/useConversation";
 import { usePrescription } from "@/hooks/usePrescription";
 import PrescriptionModal from "@/components/prescriptions/PrescriptionModal";
 import { usePresence } from "@/context/PresenceContext";
+import { useSocket } from "@/hooks/useSocket";
 import type { ConversationListItem } from "@/types/conversation.types";
 import type { UserType } from "@/config/constants";
 import type { PrescriptionFormData } from "@/types/prescription.types";
+import type { MessageEvent } from "@/types/socket.types";
 
 /**
  * Convert ConversationListItem to display format for ConversationList
@@ -32,6 +34,7 @@ const mapConversationListItem = (
   timeAgo: string;
   avatar: string;
   online?: boolean;
+  isUnread?: boolean;
 } => {
   // Determine the other person in the conversation
   const otherPerson =
@@ -40,14 +43,22 @@ const mapConversationListItem = (
   const partnerOnline = isOnlineFn(otherPerson.id);
 
   // Get role label based on user type
-  const getRoleLabel = (userType: string): string => {
+  // Note: Backend returns "shop_owner" (not "shop_keeper")
+  const getRoleLabel = (userType: string | undefined): string => {
+    if (!userType) {
+      return "User";
+    }
+    
     switch (userType) {
       case "patient":
         return "Patient";
       case "doctor":
         return "Doctor";
-      case "shop_keeper":
+      case "shop_owner": // Backend returns "shop_owner"
+      case "shop_keeper": // Fallback for legacy data
         return "Shop Owner";
+      case "admin":
+        return "Admin";
       default:
         return "User";
     }
@@ -61,7 +72,22 @@ const mapConversationListItem = (
     : formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
 
   // Get preview from last message
-  const preview = item.last_message?.message || "No messages yet";
+  // Handle prescription messages (message is null) and text messages
+  const getPreviewText = (lastMessage: typeof item.last_message): string => {
+    if (!lastMessage) {
+      return "No messages yet";
+    }
+
+    // For prescription messages, message can be null - show "Prescription"
+    if (lastMessage.message_type === 'prescription') {
+      return lastMessage.message || 'Prescription';
+    }
+
+    // For text messages, show message or "No messages yet" if empty
+    return lastMessage.message || "No messages yet";
+  };
+
+  const preview = getPreviewText(item.last_message);
 
   return {
     id: item.id,
@@ -81,6 +107,29 @@ export default function ConversationsWorkspace() {
   const { isOnline, setInitialStatus } = usePresence();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  
+  // Track last read message ID per conversation
+  // When a conversation is viewed, we store the last message ID we've seen
+  // If a new message arrives with ID > lastReadId, conversation is unread
+  const [lastReadMessageIds, setLastReadMessageIds] = useState<Record<string, string>>({});
+  
+  // Listen to WebSocket message events to track unread state
+  // When a new message arrives from someone else, mark conversation as unread
+  useSocket(user?.type as UserType | undefined, {
+    onMessage: (event: MessageEvent) => {
+      if (!user || !event?.data) return;
+      
+      const message = event.data;
+      const conversationId = message.conversation_id;
+      
+      // If message is from current user, they've already "read" it (they sent it)
+      // Only mark as unread if message is from someone else
+      if (message.sender_id !== user.id) {
+        // Don't mark as read - keep it unread until user views the conversation
+        // The unread state will be determined by comparing last_message.id with lastReadId
+      }
+    },
+  });
 
   // Fetch conversations list
   const {
@@ -127,13 +176,37 @@ export default function ConversationsWorkspace() {
     });
   }, [conversations, setInitialStatus]);
 
-  // Map conversations to display format
+  // Map conversations to display format with unread status
   const mappedConversations = useMemo(() => {
     if (!user || !conversations) return [];
-    return conversations.map((item) =>
-      mapConversationListItem(item, user.id, isOnline)
-    );
-  }, [conversations, user, isOnline]);
+    return conversations.map((item) => {
+      const mapped = mapConversationListItem(item, user.id, isOnline);
+      
+      // Determine if conversation is unread
+      // Unread if:
+      // 1. Has last_message
+      // 2. Last message ID is different from last read message ID
+      // 3. Conversation is not currently active (user is not viewing it)
+      // Note: We can't determine sender from last_message, so we mark as unread
+      // if message ID doesn't match last read ID and conversation is not active
+      const lastMessage = item.last_message;
+      const lastReadId = lastReadMessageIds[item.id];
+      const isCurrentlyActive = item.id === activeConversationId;
+      
+      // Mark as unread if:
+      // 1. Has last message
+      // 2. Not currently viewing this conversation
+      // 3. Last message ID doesn't match last read ID (haven't read it yet)
+      const isUnread = lastMessage 
+        && !isCurrentlyActive // Not viewing this conversation
+        && lastMessage.id !== lastReadId; // Haven't read this message yet
+      
+      return {
+        ...mapped,
+        isUnread: !!isUnread,
+      };
+    });
+  }, [conversations, user, isOnline, lastReadMessageIds]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -143,9 +216,32 @@ export default function ConversationsWorkspace() {
   }, [user, isAuthLoading, router]);
 
   const handleSelectConversation = (conversationId: string) => {
+    // Mark conversation as read when selected
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (conversation?.last_message) {
+      setLastReadMessageIds(prev => ({
+        ...prev,
+        [conversationId]: conversation.last_message!.id,
+      }));
+    }
+    
     setActiveConversationId(conversationId);
     setIsMobileChatOpen(true);
   };
+  
+  // Mark conversation as read when messages are loaded
+  useEffect(() => {
+    if (activeConversationId && messages.length > 0) {
+      // Get the most recent message ID
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage) {
+        setLastReadMessageIds(prev => ({
+          ...prev,
+          [activeConversationId]: lastMessage.id,
+        }));
+      }
+    }
+  }, [activeConversationId, messages]);
 
   const handleBackToList = () => {
     setIsMobileChatOpen(false);

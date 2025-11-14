@@ -47,8 +47,26 @@ export const useConversations = (
 
   /**
    * Convert Conversation to ConversationListItem
+   * 
+   * Backend returns Conversation[] with messages[] array (0 or 1 item)
+   * Frontend expects ConversationListItem[] with last_message object
+   * This function converts messages[0] to last_message object
    */
   const convertToListItem = useCallback((conversation: Conversation): ConversationListItem => {
+    // Get last message (messages[0] or null)
+    // Backend returns messages ordered by created_at DESC, so [0] is the latest
+    const lastMessage = conversation.messages?.[0] || null;
+
+    // Create last_message object
+    const last_message = lastMessage
+      ? {
+          id: lastMessage.id,
+          message: lastMessage.message, // Can be null for prescription messages
+          message_type: lastMessage.message_type, // 'text' | 'prescription'
+          created_at: lastMessage.created_at,
+        }
+      : undefined;
+
     return {
       id: conversation.id,
       creator_id: conversation.creator_id,
@@ -61,13 +79,7 @@ export const useConversations = (
       updated_at: conversation.updated_at,
       creator: conversation.creator,
       participant: conversation.participant,
-      last_message: conversation.messages && conversation.messages.length > 0
-        ? {
-            id: conversation.messages[conversation.messages.length - 1].id,
-            message: conversation.messages[conversation.messages.length - 1].message || '',
-            created_at: conversation.messages[conversation.messages.length - 1].created_at,
-          }
-        : undefined,
+      last_message,
     };
   }, []);
 
@@ -102,15 +114,24 @@ export const useConversations = (
 
   /**
    * Handle new message WebSocket event to update conversation list
+   * 
+   * Updates last_message in conversation list when new message is received
+   * Includes message_type for proper preview text generation
    */
   const handleMessage = useCallback(
     (event: MessageEvent) => {
+      // Debug logging
+      console.log('[useConversations] WebSocket message event received:', event);
+      
       if (!event?.data?.conversation_id) {
+        console.warn('[useConversations] Message event missing conversation_id:', event);
         return;
       }
 
       const message = event.data;
       const conversationId = message.conversation_id;
+
+      console.log('[useConversations] Updating conversation:', conversationId, 'with message:', message.id);
 
       // Update conversation's last message and move to top
       setConversations((prev) => {
@@ -120,21 +141,31 @@ export const useConversations = (
           const updated = [...prev];
           const conversation = updated[existingIndex];
           
-          // Update last message info
+          console.log('[useConversations] Found conversation at index:', existingIndex);
+          
+          // Update last message info with message_type
           const updatedConversation: ConversationListItem = {
             ...conversation,
             updated_at: message.created_at, // Use message timestamp as updated_at
             last_message: {
               id: message.id,
-              message: message.message || '',
+              message: message.message, // Can be null for prescription messages
+              message_type: message.message_type, // 'text' | 'prescription'
               created_at: message.created_at,
             },
           };
           
-          // Remove from current position and add to top
+          // Remove from current position and add to top (most recent first)
           updated.splice(existingIndex, 1);
-          return [updatedConversation, ...updated];
+          const newList = [updatedConversation, ...updated];
+          
+          console.log('[useConversations] Updated conversation list, new count:', newList.length);
+          
+          return newList;
         }
+        
+        console.warn('[useConversations] Conversation not found in list:', conversationId);
+        console.log('[useConversations] Current conversations:', prev.map(c => c.id));
         
         // If conversation not found, it might be a new one - refetch
         // But don't refetch here to avoid infinite loops, just return unchanged
@@ -154,21 +185,31 @@ export const useConversations = (
 
   /**
    * Fetch conversations
+   * 
+   * Backend returns Conversation[] with messages[] array
+   * Must convert to ConversationListItem[] with last_message object
    */
   const fetchConversations = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // Backend returns Conversation[] (not ConversationListItem[])
       const data = await getConversations();
-      setConversations(data);
+      
+      // Convert each conversation from API format to frontend format
+      // Backend returns Conversation[] with messages[] array
+      // Frontend expects ConversationListItem[] with last_message object
+      const converted = data.map((conv) => convertToListItem(conv));
+      
+      setConversations(converted);
     } catch (err) {
       setError(err as Error);
       setConversations([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [convertToListItem]);
 
   /**
    * Create a new conversation

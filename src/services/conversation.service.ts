@@ -11,7 +11,6 @@ import { getAccessToken } from '@/utils/token';
 import { parseApiError } from '@/utils/error-handler';
 import type {
   Conversation,
-  ConversationListItem,
   CreateConversationRequest,
   RespondToBroadcastRequest,
   ConversationResponse,
@@ -23,9 +22,12 @@ import type {
  * 
  * Returns all conversations where the user is either creator or participant.
  * 
- * @returns Promise resolving to list of conversations
+ * Note: Backend returns Conversation[] with messages[] array (not ConversationListItem[])
+ * Frontend must convert using convertToListItem() in useConversations hook
+ * 
+ * @returns Promise resolving to list of conversations (Conversation[] from backend)
  */
-export const getConversations = async (): Promise<ConversationListItem[]> => {
+export const getConversations = async (): Promise<Conversation[]> => {
   const token = getAccessToken();
 
   if (!token) {

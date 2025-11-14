@@ -43,7 +43,8 @@ export interface ConversationListItem {
   participant: User;
   last_message?: {
     id: string;
-    message: string;
+    message: string | null;
+    message_type: 'text' | 'prescription';
     created_at: string;
   };
 }
@@ -79,10 +80,13 @@ export interface ConversationResponse {
 
 /**
  * Conversation List Response
+ * 
+ * Note: Backend returns Conversation[] (not ConversationListItem[])
+ * Frontend must convert messages[] array to last_message object
  */
 export interface ConversationListResponse {
   success: boolean;
-  data: ConversationListItem[];
+  data: Conversation[]; // Backend returns Conversation[] with messages[] array
   count?: number;
 }
 

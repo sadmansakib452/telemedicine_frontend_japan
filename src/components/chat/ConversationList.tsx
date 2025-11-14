@@ -16,6 +16,7 @@ export type ConversationDisplay = {
   timeAgo: string;
   avatar: string;
   online?: boolean;
+  isUnread?: boolean;
 };
 
 type ConversationListProps = {
@@ -161,7 +162,11 @@ export default function ConversationList({
 
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white/90">
+                          <p className={`text-sm ${
+                            conversation.isUnread 
+                              ? "font-bold text-gray-900 dark:text-white" 
+                              : "font-semibold text-gray-900 dark:text-white/90"
+                          }`}>
                             {conversation.name}
                           </p>
                           <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -171,7 +176,11 @@ export default function ConversationList({
                         <p className="text-xs text-brand-500 dark:text-brand-300">
                           {conversation.role}
                         </p>
-                        <p className="mt-1 line-clamp-1 text-sm text-gray-500 dark:text-gray-300">
+                        <p className={`mt-1 line-clamp-1 text-sm ${
+                          conversation.isUnread 
+                            ? "font-semibold text-gray-900 dark:text-white" 
+                            : "text-gray-500 dark:text-gray-300"
+                        }`}>
                           {conversation.preview}
                         </p>
                       </div>
