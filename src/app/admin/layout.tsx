@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebar } from "@/context/SidebarContext";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminBackdrop from "@/components/admin/AdminBackdrop";
@@ -14,8 +15,28 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { isExpanded, isHovered } = useSidebar();
   const router = useRouter();
   const pathname = usePathname();
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  // Calculate sidebar width for main content margin
+  // Sidebar is 290px when expanded or hovered, 90px when collapsed
+  const sidebarWidth = isExpanded || isHovered ? 290 : 90;
+  
+  // Check if we're on desktop (lg breakpoint = 1024px)
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    
+    return () => {
+      window.removeEventListener('resize', checkDesktop);
+    };
+  }, []);
 
   // Role guard: Redirect non-admin users
   useEffect(() => {
@@ -67,8 +88,16 @@ export default function AdminLayout({
       <div className="relative flex flex-1 overflow-hidden">
         <AdminBackdrop />
         <AdminSidebar />
-        {/* Main content area - accounts for fixed sidebar (90px collapsed) */}
-        <main className="flex-1 overflow-y-auto transition-all duration-300 lg:ml-[90px]">
+        {/* Main content area - accounts for fixed sidebar width dynamically */}
+        {/* Sidebar is fixed, so main content needs margin-left to avoid overlap */}
+        {/* Margin matches sidebar width: 90px collapsed, 290px expanded/hovered */}
+        {/* On mobile: no margin (sidebar overlays), On desktop: margin equals sidebar width */}
+        <main 
+          className="flex-1 overflow-y-auto transition-all duration-300"
+          style={{ 
+            marginLeft: isDesktop ? `${sidebarWidth}px` : '0px'
+          }}
+        >
           {children}
         </main>
       </div>

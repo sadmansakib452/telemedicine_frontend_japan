@@ -1,55 +1,62 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/config/routes";
+import { useSidebar } from "@/context/SidebarContext";
+import { PUBLIC_ROUTES } from "@/config/routes";
 import UserDropdown from "@/components/header/UserDropdown";
-
-type NavLink = {
-  label: string;
-  href: string;
-};
-
-const ADMIN_NAV_LINKS: NavLink[] = [
-  {
-    label: "Dashboard",
-    href: PROTECTED_ROUTES.ADMIN_DASHBOARD,
-  },
-  {
-    label: "Users",
-    href: PROTECTED_ROUTES.ADMIN_USERS,
-  },
-  {
-    label: "Conversations",
-    href: PROTECTED_ROUTES.ADMIN_CONVERSATIONS,
-  },
-  {
-    label: "Prescriptions",
-    href: PROTECTED_ROUTES.ADMIN_PRESCRIPTIONS,
-  },
-  {
-    label: "Broadcasts",
-    href: PROTECTED_ROUTES.ADMIN_BROADCASTS,
-  },
-];
 
 const AdminHeader = () => {
   const { user, isAuthenticated } = useAuth();
-  const pathname = usePathname();
-
-  const isLinkActive = (href: string) => {
-    if (!pathname) return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+  const { isMobileOpen, toggleMobileSidebar } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-800 dark:bg-gray-900/80">
-      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-nowrap items-center justify-between gap-4 px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
-        {/* Left Side: Logo + Navigation Links - Same Row */}
-        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-4 sm:gap-5 lg:gap-6">
+    <header className="sticky top-0 z-40 h-16 w-full border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-800 dark:bg-gray-900/80">
+      <div className="mx-auto flex h-full w-full flex-nowrap items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 lg:gap-4 lg:px-6">
+        {/* Left Side: Mobile Menu Button + Logo */}
+        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 sm:gap-3 lg:gap-4">
+          {/* Mobile Menu Toggle Button - Only visible on mobile */}
+          <button
+            onClick={toggleMobileSidebar}
+            className="flex items-center justify-center w-10 h-10 text-gray-500 rounded-lg border border-gray-200 transition hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 lg:hidden"
+            aria-label="Toggle Sidebar"
+          >
+            {isMobileOpen ? (
+              // Close icon (X) when sidebar is open
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
+                  fill="currentColor"
+                />
+              </svg>
+            ) : (
+              // Hamburger menu icon when sidebar is closed
+              <svg
+                width="16"
+                height="12"
+                viewBox="0 0 16 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z"
+                  fill="currentColor"
+                />
+              </svg>
+            )}
+          </button>
+
           {/* Logo */}
           <Link 
             href={PUBLIC_ROUTES.HOME} 
@@ -60,7 +67,7 @@ const AdminHeader = () => {
               alt="QuickMed Connect"
               width={40}
               height={40}
-              className="h-8 w-8 object-contain dark:hidden sm:h-10 sm:w-10"
+              className="h-8 w-8 object-contain dark:hidden sm:h-9 sm:w-9"
               priority
             />
             <Image
@@ -68,44 +75,27 @@ const AdminHeader = () => {
               alt="QuickMed Connect"
               width={120}
               height={31}
-              className="hidden h-8 w-auto object-contain dark:block sm:h-10"
+              className="hidden h-8 w-auto object-contain dark:block sm:h-9"
               priority
             />
           </Link>
-
-          {/* Navigation Links - Horizontally aligned next to Logo */}
-          <nav className="flex flex-nowrap items-center gap-2 overflow-x-auto text-sm no-scrollbar sm:gap-3">
-            {ADMIN_NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 font-medium transition sm:px-4 sm:py-2 ${
-                  isLinkActive(link.href)
-                    ? "bg-brand-500 text-white shadow-theme-xs"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-brand-500 dark:text-gray-300 dark:hover:bg-white/5"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
         {/* Right Side: User Dropdown */}
-        <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex flex-shrink-0 items-center gap-2">
           {isAuthenticated && user ? (
             <UserDropdown />
           ) : (
             <div className="flex items-center gap-2">
               <Link
                 href={PUBLIC_ROUTES.LOGIN}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300 sm:px-4 sm:py-2"
+                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300 sm:px-3 sm:py-1.5 sm:text-sm"
               >
                 Sign In
               </Link>
               <Link
                 href={PUBLIC_ROUTES.REGISTER}
-                className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:px-4 sm:py-2"
+                className="rounded-lg bg-brand-500 px-2.5 py-1.5 text-xs font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:px-3 sm:py-1.5 sm:text-sm"
               >
                 Join Now
               </Link>

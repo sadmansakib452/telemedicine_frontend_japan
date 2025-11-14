@@ -176,14 +176,20 @@ export function middleware(request: NextRequest) {
     const userType = getUserTypeFromToken(token);
     
     // Check admin routes
+    // Note: Similar to doctor and shop owner routes, we don't strictly enforce type check here
+    // Component (AdminLayout) will handle role check after fetching user data from /auth/me
+    // This prevents premature redirects before user data is loaded
+    // The component will redirect if user is not an admin
     if (isAdminRoute) {
-      if (userType !== 'admin') {
+      // Only redirect if we can definitively determine user is NOT an admin
+      // If userType is null/undefined, allow the request and let component handle it
+      if (userType && userType !== 'admin') {
         // Not admin - redirect to appropriate route
-        const redirectRoute = userType 
-          ? RouteHelpers.getRedirectRoute(userType)
-          : PROTECTED_ROUTES.CONVERSATIONS;
+        const redirectRoute = RouteHelpers.getRedirectRoute(userType);
         return NextResponse.redirect(new URL(redirectRoute, request.url));
       }
+      // If userType is null or 'admin', allow the request
+      // Component (AdminLayout) will verify using /auth/me endpoint
     }
     
     // Check doctor routes
