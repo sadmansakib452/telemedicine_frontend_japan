@@ -83,47 +83,39 @@ export default function MessageList({
     );
   }
 
-  const containerClassName = [
-    'flex-1',
-    'space-y-6',
-    'overflow-y-auto',
-    'bg-gray-50',
-    'px-8',
-    'py-6',
-    'dark:bg-gray-900/40',
-  ].join(' ');
-
   return (
     <div
       ref={messagesContainerRef}
       onScroll={handleScroll}
-      className={containerClassName}
+      className="flex h-full w-full flex-col overflow-y-auto bg-gray-50 px-3 py-3 dark:bg-gray-900/40 sm:px-6 sm:py-4"
     >
       {/* Load More Indicator */}
       {isLoadingMore && hasMore && (
-        <div className="flex items-center justify-center py-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+        <div className="flex items-center justify-center py-3">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
         </div>
       )}
 
       {/* Messages */}
-      {messages.map((message) => {
-        const senderId = message.sender_id ?? message.sender?.id ?? null;
-        const isOwnMessage = senderId === currentUserId;
+      <div className="flex flex-col space-y-4">
+        {messages.map((message) => {
+          const senderId = message.sender_id ?? message.sender?.id ?? null;
+          const isOwnMessage = senderId === currentUserId;
 
-        return (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isOwn={isOwnMessage}
-            currentUserId={currentUserId}
-            onViewPrescription={onViewPrescription}
-          />
-        );
-      })}
+          return (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isOwn={isOwnMessage}
+              currentUserId={currentUserId}
+              onViewPrescription={onViewPrescription}
+            />
+          );
+        })}
 
-      {/* Scroll Anchor */}
-      <div ref={messagesEndRef} />
+        {/* Scroll Anchor */}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 }

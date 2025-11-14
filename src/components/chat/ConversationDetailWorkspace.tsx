@@ -59,6 +59,8 @@ export default function ConversationDetailWorkspace({
         : activeConversation.creator;
 
     // Get role label based on user type
+    // Note: Backend now guarantees type field is present in creator/participant objects
+    // Backend returns "shop_owner" (not "shop_keeper"), but we handle both for compatibility
     const getRoleLabel = (userType: string): string => {
       switch (userType) {
         case "patient":
@@ -66,8 +68,10 @@ export default function ConversationDetailWorkspace({
         case "doctor":
           return "Doctor";
         case "shop_keeper":
-        case "shop_owner": // Handle both backend values
+        case "shop_owner": // Backend returns "shop_owner"
           return "Shop Owner";
+        case "admin":
+          return "Admin";
         default:
           return "User";
       }
@@ -159,7 +163,7 @@ export default function ConversationDetailWorkspace({
   // Loading state
   if (isAuthLoading || isConversationLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex h-full w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -173,7 +177,7 @@ export default function ConversationDetailWorkspace({
   // Error state
   if (conversationError) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex h-full w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
           <p className="text-sm text-error-500">
             Error: {conversationError.message}
@@ -192,7 +196,7 @@ export default function ConversationDetailWorkspace({
   // No conversation found
   if (!activeConversation || !conversationDisplay || !user) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex h-full w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Conversation not found.
@@ -209,9 +213,9 @@ export default function ConversationDetailWorkspace({
   }
 
   return (
-    <div className="flex min-h-screen w-full justify-center bg-gray-50 px-4 py-6 transition-colors dark:bg-gray-900 sm:px-6 lg:px-10 lg:py-8">
-      <div className="w-full max-w-[1400px]">
-        <div className="h-[calc(100vh-5rem)]">
+    <div className="flex h-full w-full overflow-hidden bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex w-full max-w-[1200px] flex-1 flex-col gap-3 px-3 py-3 sm:mx-auto sm:px-4 sm:gap-4 sm:py-4 lg:gap-4 lg:px-6 lg:py-4">
+        <div className="flex h-full">
           <ChatWindow
             conversation={conversationDisplay}
             conversationData={activeConversation}

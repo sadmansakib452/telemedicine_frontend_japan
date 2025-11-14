@@ -7,11 +7,8 @@
 
 'use client';
 
-import { useState, FormEvent, KeyboardEvent } from 'react';
-import { PaperPlaneIcon } from '@/icons';
-import Button from '@/components/ui/button/Button';
-import TextArea from '@/components/form/input/TextArea';
-import PrescriptionButton from '@/components/prescriptions/PrescriptionButton';
+import { useState, FormEvent, KeyboardEvent, useRef, useEffect } from 'react';
+import { PaperPlaneIcon, PlusIcon } from '@/icons';
 import PrescriptionModal from '@/components/prescriptions/PrescriptionModal';
 import PrescriptionForm from '@/components/prescriptions/PrescriptionForm';
 import { usePrescription } from '@/hooks/usePrescription';
@@ -47,17 +44,33 @@ export default function MessageInput({
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { prescription, isModalOpen: isViewModalOpen, openModal, closeModal } = usePrescription(currentUserType);
 
   // Check if prescription button should be shown
-  // Only for doctors in patient_doctor conversations
+  // Show for all doctors when they have an active conversation
+  // For doctors, patientName should always be available (with fallback to "Patient")
+  // Note: If patientName is not provided, we'll use "Patient" as a fallback
+  const finalPatientName = patientName || (currentUserType === 'doctor' ? 'Patient' : undefined);
+  
+  // Show prescription button for doctors with active conversation
   const showPrescriptionButton =
     currentUserType === 'doctor' &&
-    conversationType === 'patient_doctor' &&
-    onSendPrescription &&
-    patientName &&
-    receiverId &&
-    conversationId;
+    !!onSendPrescription &&
+    !!receiverId &&
+    !!conversationId &&
+    !!finalPatientName;
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const scrollHeight = textarea.scrollHeight;
+      const maxHeight = 112; // max-h-28 = 7rem = 112px
+      textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    }
+  }, [message]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,6 +84,10 @@ export default function MessageInput({
     try {
       await onSend(trimmedMessage);
       setMessage('');
+      // Reset textarea height after sending
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     } catch (error) {
       // Error handling is done by parent component
       console.error('Failed to send message:', error);
@@ -88,6 +105,10 @@ export default function MessageInput({
         form.requestSubmit();
       }
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
   };
 
   const handlePrescriptionSubmit = async (data: PrescriptionFormData) => {
@@ -112,35 +133,43 @@ export default function MessageInput({
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 px-8 py-6 dark:border-gray-800">
-        {/* Prescription Button (doctors only) */}
-        {showPrescriptionButton && (
-          <div className="mb-3">
-            <PrescriptionButton
-              onClick={() => setIsPrescriptionModalOpen(true)}
-              disabled={disabled || isLoading || isSending}
-            />
-          </div>
-        )}
-
-        <div className="flex items-end gap-3 rounded-full border border-gray-200 bg-white px-4 py-3 shadow-theme-xs focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900">
-          <TextArea
+      <form onSubmit={handleSubmit} className="w-full px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex items-end gap-2 rounded-full border border-gray-200/50 bg-transparent px-3 py-2 transition-colors focus-within:border-brand-300 focus-within:ring-1 focus-within:ring-brand-500/10 dark:border-gray-700/50 dark:bg-transparent dark:focus-within:border-brand-500/50">
+          {/* Textarea - Custom implementation for transparent styling */}
+          <textarea
+            ref={textareaRef}
             placeholder={placeholder}
             value={message}
-            onChange={setMessage}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
             disabled={disabled || isLoading || isSending}
             rows={1}
-            className="max-h-32 resize-none"
-            onKeyDown={handleKeyDown}
+            className="flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500"
+            style={{ maxHeight: '112px', overflowY: 'auto' }}
           />
-          <Button
+          
+          {/* Prescription Button (doctors only) - Small + icon next to send */}
+          {showPrescriptionButton && (
+            <button
+              type="button"
+              onClick={() => setIsPrescriptionModalOpen(true)}
+              disabled={disabled || isLoading || isSending}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+              aria-label="Add prescription"
+            >
+              <PlusIcon className="h-4 w-4" />
+            </button>
+          )}
+          
+          {/* Send Button */}
+          <button
             type="submit"
             disabled={isDisabled}
-            size="sm"
-            className="h-10 w-10 shrink-0 rounded-full bg-brand-500 p-0 shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500 p-0 transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-500"
+            aria-label="Send message"
           >
             <PaperPlaneIcon className="h-4 w-4 text-white" />
-          </Button>
+          </button>
         </div>
       </form>
 
@@ -158,7 +187,7 @@ export default function MessageInput({
               Create Prescription
             </h2>
             <PrescriptionForm
-              patientName={patientName || ''}
+              patientName={finalPatientName || 'Patient'}
               onSubmit={handlePrescriptionSubmit}
               isLoading={isSending}
               error={null}

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import Button from "@/components/ui/button/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/config/routes";
 import UserDropdown from "@/components/header/UserDropdown";
@@ -37,9 +36,8 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 const ChatHeader = () => {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const accessibleLinks = useMemo(() => {
     return NAV_LINKS.filter((link) => {
@@ -65,63 +63,46 @@ const ChatHeader = () => {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      await logout();
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-800 dark:bg-gray-900/80">
-      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
-          <Link href={PUBLIC_ROUTES.HOME} className="inline-flex items-center gap-3">
+      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-col gap-2 px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
+        <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+          <Link 
+            href={PUBLIC_ROUTES.HOME} 
+            className="inline-flex flex-shrink-0 items-center gap-2 sm:gap-3"
+          >
             <Image
               src="/images/logo/logo.svg"
               alt="QuickMed Connect"
-              width={140}
-              height={36}
-              className="dark:hidden"
+              width={120}
+              height={31}
+              className="h-auto w-[120px] dark:hidden sm:w-[140px]"
               priority
             />
             <Image
               src="/images/logo/logo-dark.svg"
               alt="QuickMed Connect"
-              width={140}
-              height={36}
-              className="hidden dark:block"
+              width={120}
+              height={31}
+              className="hidden h-auto w-[120px] dark:block sm:w-[140px]"
               priority
             />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-shrink-0 items-center gap-2 sm:gap-3">
             {isAuthenticated && user ? (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut || isLoading}
-                  className="hidden sm:inline-flex"
-                >
-                  {isLoggingOut ? "Logging out..." : "Logout"}
-                </Button>
-                <UserDropdown />
-              </>
+              <UserDropdown />
             ) : (
               <div className="flex items-center gap-2">
                 <Link
                   href={PUBLIC_ROUTES.LOGIN}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300"
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-200 hover:text-brand-500 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:text-brand-300 sm:px-4 sm:py-2"
                 >
                   Sign In
                 </Link>
                 <Link
                   href={PUBLIC_ROUTES.REGISTER}
-                  className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+                  className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:px-4 sm:py-2"
                 >
                   Join Now
                 </Link>
@@ -130,12 +111,12 @@ const ChatHeader = () => {
           </div>
         </div>
 
-        <nav className="flex items-center gap-2 overflow-x-auto text-sm">
+        <nav className="flex items-center gap-2 overflow-x-auto pb-1 text-sm no-scrollbar">
           {accessibleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-full px-4 py-2 font-medium transition ${
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 font-medium transition sm:px-4 sm:py-2 ${
                 isLinkActive(link.href)
                   ? "bg-brand-500 text-white shadow-theme-xs"
                   : "text-gray-600 hover:bg-gray-100 hover:text-brand-500 dark:text-gray-300 dark:hover:bg-white/5"
@@ -144,17 +125,6 @@ const ChatHeader = () => {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && user && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleLogout}
-              disabled={isLoggingOut || isLoading}
-              className="sm:hidden"
-            >
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </Button>
-          )}
         </nav>
       </div>
     </header>

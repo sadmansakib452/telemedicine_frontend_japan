@@ -9,9 +9,9 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50 transition-colors dark:bg-gray-900">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors dark:bg-gray-900">
       <ChatHeader />
-      <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+      <main className="flex-1 overflow-hidden">{children}</main>
     </div>
   );
 }

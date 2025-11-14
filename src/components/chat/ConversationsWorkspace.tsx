@@ -43,10 +43,11 @@ const mapConversationListItem = (
   const partnerOnline = isOnlineFn(otherPerson.id);
 
   // Get role label based on user type
-  // Note: Backend returns "shop_owner" (not "shop_keeper")
+  // Note: Backend now guarantees type field is present in creator/participant objects
+  // Backend returns "shop_owner" (not "shop_keeper"), but we handle both for compatibility
   const getRoleLabel = (userType: string | undefined): string => {
     if (!userType) {
-      return "User";
+      return "User"; // Fallback (should not occur now, but kept for safety)
     }
     
     switch (userType) {
@@ -120,7 +121,6 @@ export default function ConversationsWorkspace() {
       if (!user || !event?.data) return;
       
       const message = event.data;
-      const conversationId = message.conversation_id;
       
       // If message is from current user, they've already "read" it (they sent it)
       // Only mark as unread if message is from someone else
@@ -206,7 +206,7 @@ export default function ConversationsWorkspace() {
         isUnread: !!isUnread,
       };
     });
-  }, [conversations, user, isOnline, lastReadMessageIds]);
+  }, [conversations, user, isOnline, lastReadMessageIds, activeConversationId]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -311,7 +311,7 @@ export default function ConversationsWorkspace() {
   // Initial loading state (before user/auth is loaded)
   if (isInitialLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex h-full w-full items-center justify-center bg-gray-50 transition-colors dark:bg-gray-900">
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -325,13 +325,13 @@ export default function ConversationsWorkspace() {
   // Always render the two-panel layout (even on error or empty state)
   // Error and empty states are handled inside ConversationList component
   return (
-    <div className="flex min-h-screen w-full justify-center bg-gray-50 px-4 py-6 transition-colors dark:bg-gray-900 sm:px-6 lg:px-10 lg:py-8">
-      <div className="grid w-full max-w-[1400px] grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="flex h-full w-full overflow-hidden bg-gray-50 transition-colors dark:bg-gray-900">
+      <div className="flex w-full max-w-[1200px] flex-1 flex-col gap-3 px-3 py-3 sm:mx-auto sm:px-4 sm:gap-4 sm:py-4 lg:flex-row lg:gap-4 lg:px-6 lg:py-4">
         {/* Conversation List (Left Panel) */}
         <div
-          className={`h-[calc(100vh-5rem)] ${
+          className={`flex h-full ${
             isMobileChatOpen ? "hidden" : "flex"
-          } lg:flex`}
+          } lg:flex lg:w-[280px] lg:flex-shrink-0`}
         >
           <ConversationList
             conversations={mappedConversations}
@@ -344,7 +344,7 @@ export default function ConversationsWorkspace() {
 
         {/* Chat Window (Right Panel) */}
         <div
-          className={`h-[calc(100vh-5rem)] ${
+          className={`flex h-full flex-1 ${
             isMobileChatOpen ? "flex" : "hidden"
           } lg:flex`}
         >
@@ -364,7 +364,7 @@ export default function ConversationsWorkspace() {
               onViewPrescription={handleViewPrescription}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-[32px] border border-gray-200 bg-white shadow-theme-xl dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex h-full w-full items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-theme-xl dark:border-gray-800 dark:bg-gray-900">
               {isConversationLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />

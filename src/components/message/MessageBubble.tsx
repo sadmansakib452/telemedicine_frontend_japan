@@ -33,25 +33,25 @@ export default function MessageBubble({
 
   return (
     <div
-      className={`flex items-end gap-3 ${
+      className={`flex items-end gap-2 ${
         isOwn ? 'flex-row-reverse text-right' : ''
       }`}
     >
       {/* Avatar */}
       {!isOwn && (
-        <div className="inline-flex h-10 w-10 overflow-hidden rounded-full">
+        <div className="inline-flex h-9 w-9 flex-shrink-0 overflow-hidden rounded-full">
           <Image
             src={sender.avatar_url || sender.avatar || '/images/user/user-01.jpg'}
             alt={sender.name}
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="h-full w-full object-cover"
           />
         </div>
       )}
 
       {/* Message Content */}
-      <div className={`max-w-2xl ${isOwn ? 'text-right' : ''}`}>
+      <div className={`max-w-[70%] sm:max-w-lg ${isOwn ? 'text-right' : ''}`}>
         {/* Message Bubble */}
         {isPrescription ? (
           /* Prescription Message */
@@ -63,18 +63,18 @@ export default function MessageBubble({
         ) : (
           /* Text Message */
           <div
-            className={`inline-flex rounded-3xl px-5 py-3 text-sm leading-6 shadow-theme-sm ${
+            className={`inline-flex rounded-2xl px-4 py-2.5 text-sm leading-5 shadow-theme-sm ${
               isOwn
                 ? 'bg-brand-500 text-white'
                 : 'bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200'
             }`}
           >
-            <div className="whitespace-pre-wrap">{text || ''}</div>
+            <div className="whitespace-pre-wrap break-words">{text || ''}</div>
           </div>
         )}
 
         {/* Message Meta */}
-        <div className={`mt-2 flex items-center gap-2 ${isOwn ? 'justify-end' : ''}`}>
+        <div className={`mt-1.5 flex items-center gap-1.5 ${isOwn ? 'justify-end' : ''}`}>
           <span className="text-xs text-gray-400 dark:text-gray-500">
             {timeAgo}
           </span>
