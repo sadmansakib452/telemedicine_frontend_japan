@@ -98,13 +98,23 @@ export const API_ROUTES = {
   
   // Admin routes
   ADMIN: {
-    USERS: '/admin/user',
+    // Statistics
+    STATISTICS: '/admin/user/statistics',
+    
+    // Pending verifications
+    VERIFICATIONS_PENDING: '/admin/user/verifications/pending',
+    
+    // User actions
+    USER_APPROVE: (id: string) => `/admin/user/${id}/approve`,
+    USER_REJECT: (id: string) => `/admin/user/${id}/reject`,
+    
+    // List endpoints
+    ALL_USERS: '/admin/user',
     USER_DETAIL: (id: string) => `/admin/user/${id}`,
     USER_DELETE: (id: string) => `/admin/user/${id}`,
-    STATISTICS: '/admin/user/statistics',
-    VERIFICATIONS: '/admin/verification',
-    VERIFICATION_APPROVE: (id: string) => `/admin/verification/${id}/approve`,
-    VERIFICATION_REJECT: (id: string) => `/admin/verification/${id}/reject`,
+    CONVERSATIONS: '/admin/user/conversations',
+    PRESCRIPTIONS: '/admin/user/prescriptions',
+    BROADCASTS: '/admin/user/broadcasts',
   },
 } as const;
 
@@ -116,7 +126,7 @@ export const RouteHelpers = {
    * Check if route is public
    */
   isPublicRoute: (path: string): boolean => {
-    return Object.values(PUBLIC_ROUTES).includes(path as any);
+    return Object.values(PUBLIC_ROUTES).some(route => route === path);
   },
   
   /**

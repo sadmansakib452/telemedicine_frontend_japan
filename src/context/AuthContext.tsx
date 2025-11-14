@@ -167,15 +167,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Store access token
         setAccessToken(response.authorization.access_token);
         
-        // Fetch user data
-        await fetchCurrentUser();
+        // Refresh token if needed (ensure token is valid before fetching user)
+        await refreshAccessTokenIfNeeded();
+        
+        // Fetch user data (this updates the state with user info)
+        const user = await getCurrentUser();
+        updateState({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+        });
         
         // Setup auto token refresh
         setupAutoTokenRefresh();
         
-        // Redirect based on user type (type is at root level in response)
+        // Redirect based on user type from fetched user data
+        // Prefer user.type from /auth/me endpoint over response.type
         // Use window.location.href for full page reload to ensure cookie is sent to middleware
-        const redirectRoute = RouteHelpers.getRedirectRoute(response.type);
+        const userType = user?.type || response?.type;
+        if (!userType) {
+          console.error('User type not found in response or user data', { user, response });
+          updateState({ 
+            isLoading: false, 
+            error: 'Failed to determine user type. Please try again.' 
+          });
+          return;
+        }
+        const redirectRoute = RouteHelpers.getRedirectRoute(userType);
         window.location.href = redirectRoute;
       } catch (error) {
         // Check if error is about pending approval
@@ -197,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw error;
       }
     },
-    [updateState, fetchCurrentUser]
+    [updateState]
   );
   
   /**
