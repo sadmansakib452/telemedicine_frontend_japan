@@ -46,7 +46,7 @@ export default function ConversationDetailWorkspace({
     isModalOpen: isPrescriptionModalOpen,
     openModal: openPrescriptionModal,
     closeModal: closePrescriptionModal,
-  } = usePrescription();
+  } = usePrescription(user?.type as UserType | string | undefined);
 
   // Map conversation to display format
   const conversationDisplay = useMemo(() => {

@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/config/routes";
-import { RouteHelpers } from "@/config/routes";
+import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
+import { useState, useEffect, useRef } from "react";
 
 const nav_links = [
   { href: "#home", label: "Home" },
@@ -13,17 +15,69 @@ const nav_links = [
 ];
 
 export default function LandingNavbar() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, error, logout } = useAuth();
   const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get inbox route based on user type
-  const getInboxRoute = () => {
-    if (!user) return PROTECTED_ROUTES.CONVERSATIONS;
-    return RouteHelpers.getRedirectRoute(user.type);
+  const isShopOwner = user?.type === "shop_keeper" || (user?.type as string) === "shop_owner";
+
+  // Handle loading timeout - if loading takes more than 3 seconds, show Sign In button
+  useEffect(() => {
+    if (isLoading) {
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      // Set timeout to show Sign In button after 3 seconds
+      loadingTimeoutRef.current = setTimeout(() => {
+        setShowSignIn(true);
+      }, 3000);
+    } else {
+      // Loading finished, clear timeout and reset showSignIn
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+      setShowSignIn(false);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
+
+  // Also show Sign In if there's an error
+  useEffect(() => {
+    if (error) {
+      setShowSignIn(true);
+    }
+  }, [error]);
+
+  const closeDropdown = () => {
+    setIsDropdownOpen(false);
+  };
+
+  const handleNavigation = (href: string) => {
+    router.push(href);
+    closeDropdown();
   };
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      setIsLoggingOut(true);
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -58,41 +112,96 @@ export default function LandingNavbar() {
               {link.label}
             </Link>
           ))}
-          {/* Show Inbox link if authenticated */}
-          {isAuthenticated && !isLoading && (
-            <Link
-              href={getInboxRoute()}
-              className="transition-colors hover:text-brand-500 dark:hover:text-brand-400"
-            >
-              Inbox
-            </Link>
-          )}
         </nav>
 
         {/* Desktop Auth Buttons */}
         <div className="hidden items-center gap-3 lg:flex">
-          {isLoading ? (
-            // Loading state
+          {isLoading && !showSignIn ? (
+            // Loading state (only show for first 3 seconds)
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-          ) : isAuthenticated && user ? (
-            // Authenticated state
-            <>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {user.name}
-              </span>
-              <Link
-                href={getInboxRoute()}
-                className="rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
-              >
-                Inbox
-              </Link>
+          ) : isAuthenticated && user && !showSignIn ? (
+            // Authenticated state - Custom profile dropdown
+            <div className="relative">
               <button
-                onClick={handleLogout}
-                className="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 dark:text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDropdownOpen(!isDropdownOpen);
+                }}
+                className="dropdown-toggle flex items-center text-gray-700 transition hover:text-brand-500 dark:text-gray-300"
               >
-                Logout
+                <span className="mr-3 h-11 w-11 overflow-hidden rounded-full">
+                  <Image
+                    width={44}
+                    height={44}
+                    src={user.avatar_url || user.avatar || "/images/user/owner.jpg"}
+                    alt={user.name || "User"}
+                  />
+                </span>
+                <svg
+                  className={`stroke-gray-500 transition-transform duration-200 dark:stroke-gray-400 ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                  width="18"
+                  height="20"
+                  viewBox="0 0 18 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
-            </>
+
+              {/* Custom dropdown menu */}
+              {isDropdownOpen && (
+                <Dropdown
+                  isOpen={isDropdownOpen}
+                  onClose={closeDropdown}
+                  className="absolute right-0 mt-2 flex w-[200px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
+                >
+                  <ul className="flex flex-col gap-1">
+                    <li>
+                      <DropdownItem
+                        onClick={() => handleNavigation("/profile")}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                      >
+                        Profile
+                      </DropdownItem>
+                    </li>
+                    <li>
+                      <DropdownItem
+                        onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                      >
+                        Inbox
+                      </DropdownItem>
+                    </li>
+                    {isShopOwner && (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.PRESCRIPTIONS_INBOX)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Prescriptions
+                        </DropdownItem>
+                      </li>
+                    )}
+                  </ul>
+                  {/* Logout Button */}
+                  <DropdownItem
+                    onClick={handleLogout}
+                    className="mt-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                  >
+                    {isLoggingOut ? "Logging out..." : "Sign out"}
+                  </DropdownItem>
+                </Dropdown>
+              )}
+            </div>
           ) : (
             // Not authenticated state
             <>
@@ -114,25 +223,74 @@ export default function LandingNavbar() {
 
         {/* Mobile Auth Buttons */}
         <div className="flex items-center gap-3 lg:hidden">
-          {isLoading ? (
-            // Loading state
+          {isLoading && !showSignIn ? (
+            // Loading state (only show for first 3 seconds)
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-          ) : isAuthenticated && user ? (
-            // Authenticated state
-            <>
-              <Link
-                href={getInboxRoute()}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-brand-200 hover:text-brand-500 dark:border-gray-800 dark:text-gray-300 dark:hover:border-brand-500/30 dark:hover:text-brand-400"
-              >
-                Inbox
-              </Link>
+          ) : isAuthenticated && user && !showSignIn ? (
+            // Authenticated state - Mobile profile dropdown
+            <div className="relative">
               <button
-                onClick={handleLogout}
-                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs transition-colors hover:bg-brand-600 dark:text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDropdownOpen(!isDropdownOpen);
+                }}
+                className="flex items-center text-gray-700 transition hover:text-brand-500 dark:text-gray-300"
               >
-                Logout
+                <span className="h-10 w-10 overflow-hidden rounded-full">
+                  <Image
+                    width={40}
+                    height={40}
+                    src={user.avatar_url || user.avatar || "/images/user/owner.jpg"}
+                    alt={user.name || "User"}
+                  />
+                </span>
               </button>
-            </>
+
+              {/* Mobile dropdown menu */}
+              {isDropdownOpen && (
+                <Dropdown
+                  isOpen={isDropdownOpen}
+                  onClose={closeDropdown}
+                  className="absolute right-0 mt-2 flex w-[200px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
+                >
+                  <ul className="flex flex-col gap-1">
+                    <li>
+                      <DropdownItem
+                        onClick={() => handleNavigation("/profile")}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                      >
+                        Profile
+                      </DropdownItem>
+                    </li>
+                    <li>
+                      <DropdownItem
+                        onClick={() => handleNavigation(PROTECTED_ROUTES.CONVERSATIONS)}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                      >
+                        Inbox
+                      </DropdownItem>
+                    </li>
+                    {isShopOwner && (
+                      <li>
+                        <DropdownItem
+                          onClick={() => handleNavigation(PROTECTED_ROUTES.PRESCRIPTIONS_INBOX)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                        >
+                          Prescriptions
+                        </DropdownItem>
+                      </li>
+                    )}
+                  </ul>
+                  {/* Logout Button */}
+                  <DropdownItem
+                    onClick={handleLogout}
+                    className="mt-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                  >
+                    {isLoggingOut ? "Logging out..." : "Sign out"}
+                  </DropdownItem>
+                </Dropdown>
+              )}
+            </div>
           ) : (
             // Not authenticated state
             <>

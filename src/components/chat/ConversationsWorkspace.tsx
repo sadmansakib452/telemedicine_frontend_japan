@@ -161,7 +161,7 @@ export default function ConversationsWorkspace() {
     isModalOpen: isPrescriptionModalOpen,
     openModal: openPrescriptionModal,
     closeModal: closePrescriptionModal,
-  } = usePrescription();
+  } = usePrescription(user?.type as UserType | string | undefined);
 
   // Initialize presence status for users in conversations
   useEffect(() => {

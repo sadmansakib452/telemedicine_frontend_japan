@@ -29,6 +29,11 @@ const NAV_LINKS: NavLink[] = [
     href: PROTECTED_ROUTES.BROADCASTS_INBOX,
     roles: ["doctor"],
   },
+  {
+    label: "Prescriptions",
+    href: PROTECTED_ROUTES.PRESCRIPTIONS_INBOX,
+    roles: ["shop_keeper", "shop_owner"],
+  },
 ];
 
 const ChatHeader = () => {
@@ -44,7 +49,11 @@ const ChatHeader = () => {
       if (!user?.type) {
         return false;
       }
-      return link.roles.includes(user.type);
+      // Handle both 'shop_keeper' (frontend constant) and 'shop_owner' (backend value)
+      const userType = user.type === "shop_keeper" || (user.type as string) === "shop_owner" 
+        ? "shop_owner" 
+        : user.type;
+      return link.roles.includes(userType) || link.roles.includes(user.type);
     });
   }, [user?.type]);
 

@@ -47,7 +47,7 @@ export default function MessageInput({
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
-  const { prescription, isModalOpen: isViewModalOpen, openModal, closeModal } = usePrescription();
+  const { prescription, isModalOpen: isViewModalOpen, openModal, closeModal } = usePrescription(currentUserType);
 
   // Check if prescription button should be shown
   // Only for doctors in patient_doctor conversations
