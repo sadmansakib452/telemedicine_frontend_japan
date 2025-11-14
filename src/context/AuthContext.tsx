@@ -264,7 +264,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
         
         // Handle based on user type and approval status
-        if (isPending && (userType === 'doctor' || userType === 'shop_keeper')) {
+        // Handle both 'shop_keeper' (frontend constant) and 'shop_owner' (backend value)
+        const isShopOwner = userType === 'shop_keeper' || (userType as string) === 'shop_owner';
+        if (isPending && (userType === 'doctor' || isShopOwner)) {
           // Doctor/Shop Owner - Pending approval
           // Redirect to verification success page with pending status
           router.push(`${PUBLIC_ROUTES.LOGIN}?verification=success&status=pending`);

@@ -161,7 +161,7 @@ export default function OtpVerificationForm({
               </span>
               . Please enter the code below.
             </p>
-            {currentUserType && (currentUserType === 'doctor' || currentUserType === 'shop_keeper') && (
+            {currentUserType && (currentUserType === 'doctor' || currentUserType === 'shop_keeper' || (currentUserType as string) === 'shop_owner') && (
               <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
                 Note: After verification, your account will be reviewed by an administrator before you can log in.
               </p>

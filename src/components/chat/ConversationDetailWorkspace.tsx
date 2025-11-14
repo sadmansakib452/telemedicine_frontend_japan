@@ -66,6 +66,7 @@ export default function ConversationDetailWorkspace({
         case "doctor":
           return "Doctor";
         case "shop_keeper":
+        case "shop_owner": // Handle both backend values
           return "Shop Owner";
         default:
           return "User";

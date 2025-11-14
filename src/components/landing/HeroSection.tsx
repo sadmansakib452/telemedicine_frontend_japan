@@ -86,48 +86,50 @@ export default function HeroSection() {
             respond faster.
           </p>
 
-          {/* Broadcast Form for Patients */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white/90">
-                Send a Broadcast
-              </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {canSendBroadcast
-                  ? "Describe your symptoms or medical concerns. Your message will be broadcast to all verified doctors."
-                  : "Sign in as a patient to send a broadcast to verified doctors."}
-              </p>
-            </div>
-
-            {/* Show error if user is not patient */}
-            {submitError && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                {submitError}
-              </div>
-            )}
-
-            {/* Broadcast Form */}
-            <BroadcastForm
-              onSubmit={handleBroadcastSubmit}
-              isLoading={isSubmitting}
-              error={submitError ? new Error(submitError) : null}
-            />
-
-            {/* Show sign-in prompt if not authenticated */}
-            {!isAuthenticated && !isAuthLoading && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Need an account?{" "}
-                  <Link
-                    href={PUBLIC_ROUTES.REGISTER}
-                    className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                  >
-                    Create one now
-                  </Link>
+          {/* Broadcast Form for Patients Only */}
+          {canSendBroadcast || !isAuthenticated ? (
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white/90">
+                  Send a Broadcast
+                </h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {canSendBroadcast
+                    ? "Describe your symptoms or medical concerns. Your message will be broadcast to all verified doctors."
+                    : "Sign in as a patient to send a broadcast to verified doctors."}
                 </p>
               </div>
-            )}
-          </div>
+
+              {/* Show error if user is not patient */}
+              {submitError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                  {submitError}
+                </div>
+              )}
+
+              {/* Broadcast Form */}
+              <BroadcastForm
+                onSubmit={handleBroadcastSubmit}
+                isLoading={isSubmitting}
+                error={submitError ? new Error(submitError) : null}
+              />
+
+              {/* Show sign-in prompt if not authenticated */}
+              {!isAuthenticated && !isAuthLoading && (
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Need an account?{" "}
+                    <Link
+                      href={PUBLIC_ROUTES.REGISTER}
+                      className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                    >
+                      Create one now
+                    </Link>
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

@@ -125,7 +125,9 @@ export const useSocket = (
     }
 
     // Role-based event listeners for shop owners
-    if (currentUserType === 'shop_keeper') {
+    // Handle both 'shop_keeper' (frontend constant) and 'shop_owner' (backend value)
+    const isShopOwner = currentUserType === 'shop_keeper' || (currentUserType as string) === 'shop_owner';
+    if (isShopOwner) {
       if (currentHandlers.onNewPrescription) {
         socketInstance.on(WS_EVENTS.NEW_PRESCRIPTION, currentHandlers.onNewPrescription);
       }
