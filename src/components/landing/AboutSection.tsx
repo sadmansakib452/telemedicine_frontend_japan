@@ -17,33 +17,48 @@ const milestones = [
 ];
 
 export default function AboutSection() {
+  const gradientCards = [
+    'from-brand-500/10 via-purple-500/10 to-pink-500/10',
+    'from-purple-500/10 via-pink-500/10 to-blue-light-500/10',
+    'from-pink-500/10 via-blue-light-500/10 to-brand-500/10',
+  ];
+
+  const borderGradients = [
+    'from-brand-500 to-purple-500',
+    'from-purple-500 to-pink-500',
+    'from-pink-500 to-brand-500',
+  ];
+
   return (
     <section
       id="about"
-      className="relative border-t border-gray-200 bg-white py-20 dark:border-gray-800 dark:bg-gray-900"
+      className="relative border-t border-gray-200/50 bg-gradient-to-b from-white to-gray-50/50 py-20 dark:border-gray-800/50 dark:from-gray-900 dark:to-gray-800/30"
     >
       <div className="mx-auto max-w-(--breakpoint-2xl) px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center justify-center rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-500 dark:bg-brand-500/10 dark:text-brand-300">
+          <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-pink-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-600 dark:from-brand-500/20 dark:via-purple-500/20 dark:to-pink-500/20 dark:text-brand-400 border border-brand-500/20 dark:border-brand-500/30">
             About QuickMed Connect
           </span>
-          <h2 className="mt-6 text-3xl font-semibold text-gray-900 dark:text-white/90 md:text-4xl">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
             Designed around a single conversation loop.
           </h2>
-          <p className="mt-4 text-base text-gray-600 dark:text-gray-300 md:text-lg">
+          <p className="mt-4 text-base text-gray-600 dark:text-gray-300 md:text-lg leading-relaxed">
             We replaced dashboards with dialogue so every participant can focus
             on care. QuickMed Connect keeps the patient story at the center,
             from first broadcast to final prescription handoff.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 md:grid-cols-3">
-          {milestones.map((item) => (
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
+          {milestones.map((item, index) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-theme-xs transition hover:border-brand-200 hover:bg-white dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-brand-500/30 dark:hover:bg-gray-800"
+              className={`gradient-card relative rounded-2xl bg-gradient-to-br ${gradientCards[index]} p-6 backdrop-blur-sm`}
             >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white/90">
+              {/* Gradient Border Top */}
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${borderGradients[index]} rounded-t-2xl`} />
+              
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 {item.title}
               </h3>
               <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">

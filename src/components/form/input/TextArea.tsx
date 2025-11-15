@@ -5,6 +5,7 @@ interface TextareaProps {
   rows?: number; // Number of rows
   value?: string; // Current value
   onChange?: (value: string) => void; // Change handler
+  onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void; // Key down handler
   className?: string; // Additional CSS classes
   disabled?: boolean; // Disabled state
   error?: boolean; // Error state
@@ -16,6 +17,7 @@ const TextArea: React.FC<TextareaProps> = ({
   rows = 3, // Default number of rows
   value = "", // Default value
   onChange, // Callback for changes
+  onKeyDown, // Key down handler
   className = "", // Additional custom styles
   disabled = false, // Disabled state
   error = false, // Error state
@@ -44,6 +46,7 @@ const TextArea: React.FC<TextareaProps> = ({
         rows={rows}
         value={value}
         onChange={handleChange}
+        onKeyDown={onKeyDown}
         disabled={disabled}
         className={textareaClasses}
       />

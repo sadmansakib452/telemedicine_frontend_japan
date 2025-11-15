@@ -23,23 +23,41 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   const combinedClasses = `${baseClassName} ${className}`.trim();
 
   const handleClick = (event: React.MouseEvent) => {
-    if (tag === "button") {
+    // Stop event propagation to prevent click-outside handlers from firing
+    event.stopPropagation();
+    event.nativeEvent.stopImmediatePropagation();
+    
+    // Prevent default for buttons (but not for links - we want navigation to work)
+    if (tag === "button" && !href) {
       event.preventDefault();
     }
-    if (onClick) onClick();
-    if (onItemClick) onItemClick();
+    
+    // Execute onClick handler first (for navigation/logout)
+    if (onClick) {
+      onClick();
+    }
+    
+    // Then execute onItemClick handler (for closing dropdown, etc.)
+    if (onItemClick) {
+      onItemClick();
+    }
+  };
+  
+  // Handle mousedown to prevent immediate closing
+  const handleMouseDown = (event: React.MouseEvent) => {
+    event.stopPropagation();
   };
 
   if (tag === "a" && href) {
     return (
-      <Link href={href} className={combinedClasses} onClick={handleClick}>
+      <Link href={href} className={combinedClasses} onClick={handleClick} onMouseDown={handleMouseDown}>
         {children}
       </Link>
     );
   }
 
   return (
-    <button onClick={handleClick} className={combinedClasses}>
+    <button onClick={handleClick} onMouseDown={handleMouseDown} className={combinedClasses}>
       {children}
     </button>
   );

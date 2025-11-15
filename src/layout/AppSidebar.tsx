@@ -1,37 +1,66 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import { ChatIcon, HorizontaLDots } from "../icons/index";
+import { ChatIcon, HorizontaLDots, MailIcon, DocsIcon } from "../icons/index";
+import { useAuth } from "@/hooks/useAuth";
+import { PROTECTED_ROUTES } from "@/config/routes";
+type NavItem = {
+  name: string;
+  icon: React.ReactNode;
+  path: string;
+};
 type NavSection = {
   title: string;
-  items: {
-    name: string;
-    icon: React.ReactNode;
-    path: string;
-  }[];
+  items: NavItem[];
 };
-
-const nav_sections: NavSection[] = [
-  {
-    title: "Workspace",
-    items: [
-      {
-        name: "Chats",
-        icon: <ChatIcon />,
-        path: "/inbox",
-      },
-    ],
-  },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const { user } = useAuth();
 
-  const isActive = (path: string) => path === pathname;
+  const nav_sections = useMemo<NavSection[]>(() => {
+    const workspaceItems: NavItem[] = [
+      {
+        name: "Conversations",
+        icon: <ChatIcon />,
+        path: PROTECTED_ROUTES.CONVERSATIONS,
+      },
+    ];
+
+    if (user?.type === "doctor") {
+      workspaceItems.push({
+        name: "Broadcasts",
+        icon: <MailIcon />,
+        path: PROTECTED_ROUTES.BROADCASTS_INBOX,
+      });
+    }
+
+    // Add Prescriptions button for shop owners
+    const isShopOwner = user?.type === "shop_keeper" || (user?.type as string) === "shop_owner";
+    if (isShopOwner) {
+      workspaceItems.push({
+        name: "Prescriptions",
+        icon: <DocsIcon />,
+        path: PROTECTED_ROUTES.PRESCRIPTIONS_INBOX,
+      });
+    }
+
+    return [
+      {
+        title: "Workspace",
+        items: workspaceItems,
+      },
+    ];
+  }, [user?.type]);
+
+  const isActive = (path: string) => {
+    if (!pathname) return false;
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
     <aside
@@ -57,23 +86,24 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
+                className="h-10 w-10 object-contain dark:hidden sm:h-12 sm:w-12"
+                src="/images/logo/logo.png"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={48}
+                height={48}
               />
               <Image
-                className="hidden dark:block"
+                className="hidden h-10 w-auto object-contain dark:block sm:h-12"
                 src="/images/logo/logo-dark.svg"
                 alt="Logo"
-                width={150}
+                width={120}
                 height={40}
               />
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              className="h-8 w-8 object-contain dark:hidden"
+              src="/images/logo/logo.png"
               alt="Logo"
               width={32}
               height={32}

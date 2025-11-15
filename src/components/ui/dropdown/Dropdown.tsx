@@ -17,22 +17,40 @@ export const Dropdown: React.FC<DropdownProps> = ({
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
- useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node) &&
-      !(event.target as HTMLElement).closest('.dropdown-toggle')
-    ) {
-      onClose();
-    }
-  };
+  useEffect(() => {
+    if (!isOpen) return;
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [onClose]);
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      // Check if click is inside dropdown container (including nested elements)
+      const isInsideDropdown = dropdownRef.current?.contains(target as Node);
+      
+      // Check if click is on toggle button
+      const isToggleButton = target.closest('.dropdown-toggle');
+      
+      // Check if click is on any interactive element inside dropdown
+      const clickedElement = target.closest('button, a, [role="button"]');
+      const isDropdownItem = clickedElement && dropdownRef.current?.contains(clickedElement as Node);
+
+      // Don't close if click is inside dropdown, on toggle button, or on dropdown item
+      if (isInsideDropdown || isToggleButton || isDropdownItem) {
+        return;
+      }
+
+      // Click is outside - close dropdown
+      if (dropdownRef.current) {
+        onClose();
+      }
+    };
+
+    // Use click event with bubble phase (default)
+    // This allows dropdown item click handlers to execute first
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
 
   if (!isOpen) return null;
